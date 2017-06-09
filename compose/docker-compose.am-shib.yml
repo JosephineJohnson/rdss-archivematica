@@ -96,6 +96,14 @@ services:
     links:
       - "idp:idp.${DOMAIN_NAME}"
 
+  archivematica-dashboard:
+    environment:
+      ARCHIVEMATICA_DASHBOARD_SHIBBOLETH_AUTHENTICATION: "True"
+
+  archivematica-storage-service:
+    environment:
+      SS_SHIBBOLETH_AUTHENTICATION: "True"
+
 networks:
   shibnet:
     driver: "bridge"
