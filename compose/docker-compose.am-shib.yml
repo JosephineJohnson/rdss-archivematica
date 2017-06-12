@@ -1,69 +1,19 @@
 ---
 version: "2"
 
-volumes:
-
-  ldap_conf:
-  ldap_data:
-
-  idp_credentials:
-  idp_logs:
-
 services:
-
-  # Shibboleth IdP service for the domain
-  idp:
-    image: "arkivum/shibboleth-idp:${DOMAIN_NAME}"
-    build:
-      context: "./shib/idp/"
-      args:
-        - DOMAIN_NAME
-    container_name: "idp.${DOMAIN_NAME}"
-    hostname: "idp"
-    domainname: "${DOMAIN_NAME}"
-    networks:
-      - "shibnet"
-    environment:
-      - "JETTY_BROWSER_SSL_KEYSTORE_PASSWORD=12345"
-      - "JETTY_BACKCHANNEL_SSL_KEYSTORE_PASSWORD=12345"
-    volumes:
-      - "idp_credentials:/opt/shibboleth-idp/credentials"
-      - "idp_logs:/opt/shibboleth-idp/logs"
-      # Provide our own IdP metadata file, configured for our SPs
-      - "./am-shib/idp/build/metadata-providers.xml:/opt/shibboleth-idp/conf/metadata-providers.xml:ro"
-    expose:
-      - "4443"
-      - "8443"
-    ports:
-      - "${IDP_EXTERNAL_IP}:443:4443"
-    depends_on:
-      - "ldap"
-    links:
-      - "ldap:ldap.${DOMAIN_NAME}"
-
-  # LDAP service for the domain
-  ldap:
-    image: "osixia/openldap"
-    hostname: "ldap"
-    domainname: "${DOMAIN_NAME}"
-    networks:
-      - "shibnet"
-    environment:
-      - "LDAP_DOMAIN=${DOMAIN_NAME}"
-      - "LDAP_ORGANISATION=${DOMAIN_ORGANISATION}"
-      - "LDAP_TLS=false"
-    volumes:
-      - "ldap_conf:/etc/ldap/"
-      - "ldap_data:/var/lib/ldap/"
-      - "./shib/ldap/etc/ldap/edu/:/usr/local/ldap/edu/"
-      - "./shib/ldap/build/demo-users.ldif:/usr/local/ldap/demo-users.ldif:ro"
-    expose:
-      - "389"
 
   # Override main nginx config, enabling Shibboleth for Archivematica services
   # Dashboard runs on 443 and Storage Service on 8443
   nginx:
     image: "arkivum/shibboleth-nginx:${DOMAIN_NAME}"
+    build:
+      context: "./am-shib/nginx/"
+      args:
+        - DOMAIN_NAME
+        - NGINX_CONF_TEMPLATE_FILE=templates/am-shib.conf.tpl
+        - SHIBBOLETH_ATTRCHECKER_TEMPLATE_FILE=templates/attrChecker.html.tpl
+        - SHIBBOLETH_CONF_TEMPLATE_FILE=templates/shibboleth2.xml.tpl
     container_name: "archivematica.${DOMAIN_NAME}"
     hostname: "archivematica"
     domainname: "${DOMAIN_NAME}"
@@ -77,13 +27,44 @@ services:
       SHIBBOLETH_IDP_ENTITY_ID: "https://idp.${DOMAIN_NAME}/idp/shibboleth"
       SHIBBOLETH_IDP_METADATA_URL: "https://idp.${DOMAIN_NAME}:4443/idp/shibboleth"
     volumes:
+      #
+      # Nginx
+      #
+      # Add Shibboleth FastCGI config
+      - "./am-shib/etc/nginx/shib_clear_headers:/etc/nginx/shib_clear_headers:ro"
+      - "./am-shib/etc/nginx/shib_fastcgi_params:/etc/nginx/shib_fastcgi_params:ro"
       # Override the default nginx archivematica config with ones for Shibboleth
-      - "./am-shib/nginx/etc/nginx/conf.d/archivematica.conf:/etc/nginx/conf.d/archivematica.conf:ro"
-      - "./am-shib/nginx/etc/nginx/conf.d/am-shib.inc:/etc/nginx/conf.d/am-shib.inc:ro"
+      - "./am-shib/etc/nginx/archivematica.conf:/etc/nginx/conf.d/archivematica.conf:ro"
+      - "./am-shib/etc/nginx/am-shib.inc:/etc/nginx/conf.d/am-shib.inc:ro"
+      #
+      # Shibboleth
+      #
+      # Add Shibboleth customizations
+      - "./am-shib/etc/sp/attrChecker.pl:/etc/shibboleth/attrChecker.pl:ro"
+      - "./am-shib/etc/sp/console.logger:/etc/shibboleth/console.logger:ro"
+      - "./am-shib/etc/sp/security-policy.xml:/etc/shibboleth/security-policy.xml:ro"
+      - "./am-shib/etc/sp/shibd.logger:/etc/shibboleth/shibd.logger:ro"
       # Override the default Shibboleth attribute-map, so we get the right attributes exposed
-      - "./am-shib/nginx/etc/shibboleth/attribute-map.xml:/etc/shibboleth/attribute-map.xml:ro"
+      - "./am-shib/etc/sp/attribute-map.xml:/etc/shibboleth/attribute-map.xml:ro"
+      #
+      # Supervisor
+      #
       # Override the default Supervisor config to add additional programs
-      - "./am-shib/nginx/etc/supervisor/conf.d/shibboleth.conf:/etc/supervisor/conf.d/shibboleth.conf:ro"
+      - "./am-shib/etc/supervisor/shibboleth.conf:/etc/supervisor/conf.d/shibboleth.conf:ro"
+      #
+      # Secrets
+      #
+      - "./am-shib/build/secrets/:/secrets/:ro"
+      #
+      # Bootstrap
+      #
+      - "./am-shib/nginx/bootstrap.sh:/usr/sbin/bootstrap.sh:ro"
+    command: ["/usr/local/bin/ep",
+      "-v", "/etc/nginx/conf.d/am-shib.conf", "/etc/shibboleth/shibboleth2.xml",
+      "--",
+      "/bin/sh", "-c",
+      "bootstrap.sh && /usr/bin/supervisord --nodaemon --configuration /etc/supervisor/supervisord.conf"
+    ]
     expose:
       - "443"
       - "8443"
@@ -93,8 +74,6 @@ services:
     depends_on:
       - "archivematica-dashboard"
       - "archivematica-storage-service"
-    links:
-      - "idp:idp.${DOMAIN_NAME}"
 
   archivematica-dashboard:
     environment:
