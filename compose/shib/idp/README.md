@@ -7,7 +7,7 @@ The IdP does not ship with a default configuration - instead an install script i
 
 This container uses the `arkivum/shibboleth-idp` image, which extends the [unicorn/shibboleth-idp](https://hub.docker.com/r/unicon/shibboleth-idp/) image, and uses CentOS 7 as its base image.
 
-The configuration here is intended to be "abstract" - additional config files are required for the service to work. The [am-shib IdP](../../am-shib/idp) and [example-shib IdP](../../example-shib/idp) are examples of this.
+The configuration here is intended to be "abstract" - additional config files are required for the service to work. The [am-shib IdP](../../am-shib/idp) is an example of this.
 
 Building
 ---------

@@ -8,9 +8,6 @@ BASE_DIR ?= ${CURDIR}
 # Do we want to include any shibboleth services?
 ifeq ("$(SHIBBOLETH_CONFIG)", "archivematica")
 	override COMPOSE_DIRS += am-shib
-else ifeq ("$(SHIBBOLETH_CONFIG)", "example")
-	# Only build example services, not Archivematica
-	override COMPOSE_DIRS = example-shib
 endif
 
 # Set the docker-compose COMPOSE_FILE env var to include the config from each
@@ -53,7 +50,4 @@ watch-idp:
 watch-nginx:
 	docker-compose logs -f nginx
 
-watch-sp:
-	docker-compose logs -f example-sp
-
-.PHONY: all bootstrap build config destroy list watch watch-idp watch-sp up
+.PHONY: all bootstrap build config destroy list watch watch-idp up

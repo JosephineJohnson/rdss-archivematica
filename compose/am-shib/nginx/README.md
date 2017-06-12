@@ -21,8 +21,6 @@ Configuration
 
 The template files for the `nginx` configuration and `shibboleth2.xml` configuration are included in the [etc](etc) folder. See [shib/nginx](../../shib/nginx) for more information.
 
-Unlike [example-shib/nginx](../../example-shib/nginx), the Archivematica Shibboleth configuration is a bit more involved and specific.
-
-In particular, it has been tuned to work with the eduPerson schema, which is what the [attribute map](etc/shibboleth/attribute-map.xml) does. The [shibboleth2.xml](etc/shibboleth/shibboleth2.xml.tpl) includes access control elements that restrict access to the Dashboard and Storage Service based on a user's entitlements (derived from the `eduPersonEntitlement` attribute in LDAP). The Dashboard and the Storage Service are treated as two seperate applications, each with their own `entityID`.
+The Archivematica Shibboleth configuration has been tuned to work with the eduPerson schema, which is what the [attribute map](etc/shibboleth/attribute-map.xml) does. The [shibboleth2.xml](etc/shibboleth/shibboleth2.xml.tpl) includes access control elements that restrict access to the Dashboard and Storage Service based on a user's entitlements (derived from the `eduPersonEntitlement` attribute in LDAP). The Dashboard and the Storage Service are treated as two seperate applications, each with their own `entityID`.
 
 Because there are two applications, there needs to be two FastCGI handlers too. This requires a change to the [Supervisor configuration](etc/supervisor/conf.d/shibboleth.conf), to add the additional handler.

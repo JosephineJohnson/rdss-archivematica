@@ -14,13 +14,12 @@ Some of these containers are required for local development only. In a productio
 Service Sets
 -------------
 
-There are currently three service sets defined:
+There are currently two service sets defined:
 
 1. [dev](dev), which defines the main Archivematica services and supporting web server, db, etc, suitable for use in a development environment.
-1. [example-shib](example-shib), which demonstrates Shibboleth integration, providing two demo applications, and Shibboleth Service Providers (SP) and an Identity Provider (IdP) with backing LDAP service.
 1. [am-shib](am-shib), which wraps the Archivematica services in the [dev](dev) service set in Shibboleth authentication, with an integrated SP and example IdP.
 
-These service sets are defined by [docker-compose.dev.yml](docker-compose.dev.yml), [docker-compose.example-shib.yml](docker-compose.example-shib.yml) and [docker-compose.am-shib.yml](docker-compose.am-shib.yml), respectively. You can use the [COMPOSE_FILE](https://docs.docker.com/compose/reference/envvars/) environment variable to set which `docker-compose` file or files you wish to use.
+These service sets are defined by [docker-compose.dev.yml](docker-compose.dev.yml) and [docker-compose.am-shib.yml](docker-compose.am-shib.yml), respectively. You can use the [COMPOSE_FILE](https://docs.docker.com/compose/reference/envvars/) environment variable to set which `docker-compose` file or files you wish to use.
 
 To just configure the Archivematica dev environment, use
 
@@ -51,9 +50,8 @@ Details of the services deployed for each service set are in the README for that
 
 * [Archivematica Services](dev/README.md)
 * [Shibboleth-enabled Archivematica Services](am-shib/README.md)
-* [Example Shibboleth Services](example-shib/README.md)
 
-There are also some service containers that are common to the `am-shib` and `example-shib` service sets, which are in the [shib](shib) folder. These have their own [README](shib/README.md) too, and their use is further described in the `am-shib` and `example-shib` READMEs.
+There are also some service containers that are used as a 'base' for the `am-shib` service set, which are in the [shib](shib) folder. These have their own [README](shib/README.md) too, and their use is further described in the [am-shib README](am-shib/README.md).
 
 Building
 ---------
@@ -69,12 +67,6 @@ To enable Shibboleth integration, use
 	make all SHIBBOLETH_CONFIG=archivematica
 
 This will include additional services defined in [docker-compose.am-shib.yml](docker-compose.am-shib.yml) in addition to those in [docker-compose.dev.yml](docker-compose.dev.yml).
-
-If you want to focus on just the Shibboleth services and aren't concerned with Archivematica, use
-
-	make all SHIBBOLETH_CONFIG=example
-
-This will bring up the services defined in [docker-compose.example-shib.yml](docker-compose.example-shib.yml), without any Archivmatica services.
 
 After a successful build of the Shibboleth-enabled Archivematica services you should find you have the following services listed by `make list`:
 
@@ -133,6 +125,6 @@ Here are some other `make` commands other than `make all` that may be useful whe
 | `make watch` | Watch logs from all containers |
 | `make watch-idp` | Watch logs from the [idp](shib/idp) container, if present |
 | `make watch-idp` | Watch logs from the `nginx` container |
-| `make watch-sp` | Watch logs from the [sp](example-shib/sp) container, if present (`example-shib` only) |
 
-Remember to append the `SHIBBOLETH_CONFIG` argument to the above commands if `make all` was run with this set, otherwise the `docker-compose` context won't be resolved properly (this is required for the `watch-idp` and `watch-sp` commands).
+
+Remember to append the `SHIBBOLETH_CONFIG` argument to the above commands if `make all` was run with this set, otherwise the `docker-compose` context won't be resolved properly (this is required for the `watch-idp` command).

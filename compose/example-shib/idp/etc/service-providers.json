@@ -1,8 +1,0 @@
-{
-  "myapp": {
-    "metadata": "https://myapp.${DOMAIN_NAME}/Shibboleth.sso/metadata"
-  },
-  "sp1": {
-    "metadata": "http://sp1.${DOMAIN_NAME}/saml2/metadata/"
-  }
-}

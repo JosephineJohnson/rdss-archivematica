@@ -1,8 +1,0 @@
-
-
-<b>request.META</b><br>
-{% for k_meta, v_meta in request.META.items|dictsort:"0.lower" %}
-  <code>{{ k_meta }}</code> : {{ v_meta }} <br>
-{% endfor %}
-
-

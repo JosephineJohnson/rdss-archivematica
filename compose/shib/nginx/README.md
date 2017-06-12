@@ -35,7 +35,7 @@ The [build script](build.sh) is provided to make building images with the requir
 
 As well as checking that each of these arguments is given and is valid, the build script also "bundles" the various files into a `ctx` folder, which is then passed to the `docker build` command. This is because Docker cannot use files outside of the base directory, so copying the input files and providing `ctx` as the base ensures all files can be found.
 
-This image is not intended to be used as-is; the configuration is missing the necessary `shibboleth2.xml`, which configures the Shibboleth SP component, and `default.conf`, which configures the Nginx Shibboleth usage. See the [am-shib build ](../../am-shib/nginx/build.sh) and the [example-shib build](../../example-shib/nginx/build.sh) for concrete examples of its usage.
+This image is not intended to be used as-is; the configuration is missing the necessary `shibboleth2.xml`, which configures the Shibboleth SP component, and `default.conf`, which configures the Nginx Shibboleth usage. See the [am-shib build ](../../am-shib/nginx/build.sh) for a concrete example of its usage.
 
 Template Files
 ---------------
