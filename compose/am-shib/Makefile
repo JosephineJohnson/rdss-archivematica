@@ -4,6 +4,8 @@ SUB_DIRS := $(sort $(wildcard */))
 
 BASE_DIR ?= ${CURDIR}
 
+VOL_BASE ?= $(BASE_DIR)/..
+
 DEFAULT_COMPOSE_FILE = $(shell realpath ../docker-compose.am-shib.yml)
 
 COMPOSE_FILE ?= "${DEFAULT_COMPOSE_FILE}"
@@ -32,9 +34,9 @@ create-secrets:
 	@mkdir -p "$(BASE_DIR)/build/secrets/nginx"
 	@docker run --rm \
 		--user $(shell id -u):$(shell id -g) \
-		--volume "$(BASE_DIR)/../shib/ca/:/src/ca" \
-		--volume "$(BASE_DIR)/nginx/:/src/nginx:ro" \
-		--volume "$(BASE_DIR)/build/secrets/nginx:/build" \
+		--volume "$(VOL_BASE)/shib-local/ca/:/src/ca" \
+		--volume "$(VOL_BASE)/am-shib/nginx/:/src/nginx:ro" \
+		--volume "$(VOL_BASE)/am-shib/build/secrets/nginx:/build" \
 		--env DOMAIN_NAME="$(DOMAIN_NAME)" \
 		--workdir "/src/nginx" \
 		rawmind/alpine-base:3.5-1 \
