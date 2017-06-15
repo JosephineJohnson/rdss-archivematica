@@ -6,10 +6,10 @@
     clockSkew="180">
     <RequestMapper type="XML">
         <RequestMap authType="shibboleth" requireSession="true">
-          <!-- Declare the host for the Archivematica Dashboard on port 443 -->
+          <!-- Declare the host for the Archivematica Dashboard -->
           <Host applicationId="archivematica-dashboard"
             name="${NGINX_HOSTNAME:-archivematica.example.ac.uk}"
-            scheme="https" port="443">
+            scheme="https" port="${AM_DASHBOARD_EXTERNAL_PORT:-443}">
             <!-- Access to the Archivematica Dashboard requires preservation entitlement -->
             <AccessControl>
                 <OR>
@@ -21,10 +21,10 @@
             <Path name="api" authType="None" requireSession="false"/>
             <Path name="media" authType="None" requireSession="false"/>
           </Host>
-          <!-- Declare the host for the Archivematica Storage Service on port 8443 -->
+          <!-- Declare the host for the Archivematica Storage Service -->
           <Host applicationId="archivematica-storage-service"
             name="${NGINX_HOSTNAME:-archivematica.example.ac.uk}"
-            scheme="https" port="8443">
+            scheme="https" port="${AM_STORAGE_SERVICE_EXTERNAL_PORT:-8443}">
             <!-- Access to the Archivematica Storage Service requires preservation entitlement -->
             <AccessControl>
                 <OR>
@@ -74,9 +74,9 @@
         </CredentialResolver>
         <!-- Archivematica applications -->
         <ApplicationOverride id="archivematica-dashboard"
-          entityID="https://${NGINX_HOSTNAME:-archivematica.example.ac.uk}/Shibboleth.sso/metadata"/>
+          entityID="https://${NGINX_HOSTNAME:-archivematica.example.ac.uk}:${AM_DASHBOARD_EXTERNAL_PORT:-443}/Shibboleth.sso/metadata"/>
         <ApplicationOverride id="archivematica-storage-service"
-          entityID="https://${NGINX_HOSTNAME:-archivematica.example.ac.uk}:8443/Shibboleth.sso/metadata"/>
+          entityID="https://${NGINX_HOSTNAME:-archivematica.example.ac.uk}:${AM_STORAGE_SERVICE_EXTERNAL_PORT:-8443}/Shibboleth.sso/metadata"/>
         <!-- Troubleshooting: Extracts support information for IdP from its metadata. -->
         <AttributeExtractor type="Metadata" errorURL="errorURL" DisplayName="displayName"
             InformationURL="informationURL" PrivacyStatementURL="privacyStatementURL"

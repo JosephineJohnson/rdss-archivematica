@@ -2,7 +2,7 @@
 # Archivematica Dashboard
 #
 server {
-	listen 443 default ssl;
+	listen ${AM_DASHBOARD_EXTERNAL_PORT:-443} default ssl;
 	client_max_body_size 256M;
 
 	# Include common Archivematica SSL and Shibboleth configuration
@@ -14,10 +14,10 @@ server {
 		include fastcgi_params;
 		include shib_fastcgi_params;
 		fastcgi_param  HTTPS on;
-		fastcgi_param  SERVER_PORT 443;
+		fastcgi_param  SERVER_PORT ${AM_DASHBOARD_EXTERNAL_PORT:-443};
 		fastcgi_param  SERVER_PROTOCOL https;
 		fastcgi_param  X_FORWARDED_PROTO https;
-		fastcgi_param  X_FORWARDED_PORT 443;
+		fastcgi_param  X_FORWARDED_PORT ${AM_DASHBOARD_EXTERNAL_PORT:-443};
 		fastcgi_pass unix:/tmp/am-dashboard-shibauthorizer.sock;
 	}
 	
@@ -25,10 +25,10 @@ server {
 	location /Shibboleth.sso {
 		include fastcgi_params;
 		fastcgi_param  HTTPS on;
-		fastcgi_param  SERVER_PORT 443;
+		fastcgi_param  SERVER_PORT ${AM_DASHBOARD_EXTERNAL_PORT:-443};
 		fastcgi_param  SERVER_PROTOCOL https;
 		fastcgi_param  X_FORWARDED_PROTO https;
-		fastcgi_param  X_FORWARDED_PORT 443;
+		fastcgi_param  X_FORWARDED_PORT ${AM_DASHBOARD_EXTERNAL_PORT:-443};
 		fastcgi_pass unix:/tmp/am-dashboard-shibresponder.sock;
 	}
 
@@ -74,7 +74,7 @@ server {
 # Archivematica Storage Service
 #
 server {
-	listen 8443 default ssl;
+	listen ${AM_STORAGE_SERVICE_EXTERNAL_PORT:-8443} default ssl;
 	client_max_body_size 256M;
 
 	# Include common Archivematica SSL and Shibboleth configuration
@@ -86,10 +86,10 @@ server {
 		include fastcgi_params;
 		include shib_fastcgi_params;
 		fastcgi_param  HTTPS on;
-		fastcgi_param  SERVER_PORT 8443;
+		fastcgi_param  SERVER_PORT ${AM_STORAGE_SERVICE_EXTERNAL_PORT:-8443};
 		fastcgi_param  SERVER_PROTOCOL https;
 		fastcgi_param  X_FORWARDED_PROTO https;
-		fastcgi_param  X_FORWARDED_PORT 8443;
+		fastcgi_param  X_FORWARDED_PORT ${AM_STORAGE_SERVICE_EXTERNAL_PORT:-8443};
 		fastcgi_pass unix:/tmp/am-storage-service-shibauthorizer.sock;
 	}
 	
@@ -97,10 +97,10 @@ server {
 	location /Shibboleth.sso {
 		include fastcgi_params;
 		fastcgi_param  HTTPS on;
-		fastcgi_param  SERVER_PORT 8443;
+		fastcgi_param  SERVER_PORT ${AM_STORAGE_SERVICE_EXTERNAL_PORT:-8443};
 		fastcgi_param  SERVER_PROTOCOL https;
 		fastcgi_param  X_FORWARDED_PROTO https;
-		fastcgi_param  X_FORWARDED_PORT 8443;
+		fastcgi_param  X_FORWARDED_PORT ${AM_STORAGE_SERVICE_EXTERNAL_PORT:-8443};
 		fastcgi_pass unix:/tmp/am-storage-service-shibresponder.sock;
 	}
 

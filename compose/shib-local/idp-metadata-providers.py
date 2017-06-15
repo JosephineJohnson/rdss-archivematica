@@ -51,7 +51,9 @@ with open(sp_conf_file, 'r') as f:
    sp_conf = json.load(f)
    for sp in sp_conf:
       metadata_url = sp_conf[sp]['metadata'].replace(
-         '${DOMAIN_NAME}', os.getenv('DOMAIN_NAME', 'example.ac.uk'))
+         '${DOMAIN_NAME}', os.getenv('DOMAIN_NAME', 'example.ac.uk')).replace(
+         '${AM_DASHBOARD_EXTERNAL_PORT}', os.getenv('AM_DASHBOARD_EXTERNAL_PORT', '443')).replace(
+         '${AM_STORAGE_SERVICE_EXTERNAL_PORT}', os.getenv('AM_STORAGE_SERVICE_EXTERNAL_PORT', '8443'))
       print ("""
     <MetadataProvider xsi:type="FileBackedHTTPMetadataProvider"
         id="{name}Metadata"

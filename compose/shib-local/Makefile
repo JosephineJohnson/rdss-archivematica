@@ -11,6 +11,8 @@ DOCKER_BUILD_UID ?= $(shell id -u)
 
 DOMAIN_NAME ?= example.ac.uk
 
+IDP_EXTERNAL_PORT ?= 443
+
 all: destroy init-ca build create-secrets up bootstrap list
 
 build: build-idp
@@ -39,6 +41,9 @@ build-idp:
 		--volume "$(VOL_BASE)/shib-local/etc/idp:/setup/conf:ro" \
 		--volume "$(VOL_BASE)/shib-local/build/idp/:/ext-mount" \
 		-e DOMAIN_NAME=$(DOMAIN_NAME) \
+		-e IDP_EXTERNAL_PORT=$(IDP_EXTERNAL_PORT) \
+		-e IDP_HOSTNAME=$(IDP_HOSTNAME) \
+		-e IDP_LDAP_HOSTNAME=$(IDP_LDAP_HOSTNAME) \
 		-e IDP_OWNER_UID=$(shell id -u) \
 		-e IDP_OWNER_GID=$(shell id -g) \
 		unicon/shibboleth-idp /setup/bin/init-idp.sh

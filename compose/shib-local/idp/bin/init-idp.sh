@@ -7,15 +7,17 @@ IDP_LDAP_HOSTNAME=${IDP_LDAP_HOSTNAME:-"ldap.${DOMAIN_NAME}"}
 
 IDP_DOMAIN=${DOMAIN_NAME}
 IDP_DOMAIN_BASEDN="$(echo -n DC=${IDP_DOMAIN} | sed 's#[.]#,DC=#g')"
+IDP_EXTERNAL_PORT=${IDP_EXTERNAL_PORT:-443}
 
 export JAVA_HOME=/opt/jre-home
 export PATH=$PATH:$JAVA_HOME/bin
 
 # Generate idp.properties based on template and env vars
-sed "s/[\$]{IDP_DOMAIN_BASEDN}/${IDP_DOMAIN_BASEDN}/g" /setup/conf/idp.properties.tpl | \
-	sed "s/[\$]{IDP_DOMAIN}/${IDP_DOMAIN}/g" | \
-	sed "s/[\$]{IDP_HOSTNAME}/${IDP_HOSTNAME}/g" | \
-	sed "s/[\$]{IDP_LDAP_HOSTNAME}/${IDP_LDAP_HOSTNAME}/g" > /tmp/idp.properties
+sed "s|[\$]{IDP_DOMAIN_BASEDN}|${IDP_DOMAIN_BASEDN}|g" /setup/conf/idp.properties.tpl | \
+	sed "s|[\$]{IDP_DOMAIN}|${IDP_DOMAIN}|g" | \
+	sed "s|[\$]{IDP_EXTERNAL_PORT}|${IDP_EXTERNAL_PORT}|g" | \
+	sed "s|[\$]{IDP_HOSTNAME}|${IDP_HOSTNAME}|g" | \
+	sed "s|[\$]{IDP_LDAP_HOSTNAME}|${IDP_LDAP_HOSTNAME}|g" > /tmp/idp.properties
 
 # Change into the Shibboleth IdP bin directory ready for the build
 cd /opt/shibboleth-idp/bin
@@ -62,6 +64,10 @@ tail -n +116 /ext-mount/customized-shibboleth-idp/metadata/idp-metadata.xml \
 	> idp-metadata.xml.tail
 cat idp-metadata.xml.head idp-metadata.xml.mid idp-metadata.xml.tail \
 	> idp-metadata.xml
+
+# Replace IdP host with actual 'external' host/port
+sed -i "s|https://${IDP_HOSTNAME}/idp/|https://${IDP_HOSTNAME}:${IDP_EXTERNAL_PORT}/idp/|g" idp-metadata.xml
+
 cp idp-metadata.xml /ext-mount/customized-shibboleth-idp/metadata/
 
 # Change owner on all exported files to be IDP_OWNER_UID:IDP_OWNER_GID

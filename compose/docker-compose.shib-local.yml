@@ -21,9 +21,13 @@ services:
     networks:
       - "shibnet"
     environment:
-      - "DOMAIN_NAME=${DOMAIN_NAME}"
-      - "JETTY_BROWSER_SSL_KEYSTORE_PASSWORD=12345"
-      - "JETTY_BACKCHANNEL_SSL_KEYSTORE_PASSWORD=12345"
+      DOMAIN_NAME: "${DOMAIN_NAME}"
+      JETTY_BROWSER_SSL_KEYSTORE_PASSWORD: "12345"
+      JETTY_BACKCHANNEL_SSL_KEYSTORE_PASSWORD: "12345"
+      # Deployment settings
+      AM_DASHBOARD_EXTERNAL_PORT: "${AM_DASHBOARD_EXTERNAL_PORT}"
+      AM_STORAGE_SERVICE_EXTERNAL_PORT: "${AM_STORAGE_SERVICE_EXTERNAL_PORT}"
+      IDP_EXTERNAL_PORT: "${IDP_EXTERNAL_PORT}"
     volumes:
       - "idp_logs:/opt/shibboleth-idp/logs"
       # Shibboleth IdP customizations
@@ -49,7 +53,7 @@ services:
       - "4443"
       - "8443"
     ports:
-      - "${IDP_EXTERNAL_IP}:443:4443"
+      - "${IDP_EXTERNAL_IP}:${IDP_EXTERNAL_PORT}:4443"
     depends_on:
       - "ldap"
     links:
