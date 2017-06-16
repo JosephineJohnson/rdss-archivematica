@@ -4,7 +4,6 @@ Common Shibboleth Services
 This folder contains the definitions for services that are common to all Shibboleth-based deployments. In particular, it includes:
 
 1. [Shibboleth Identity Provider](idp) (IdP) service
-1. [Nginx-Shibboleth](nginx) service, which includes the [Shibboleth FastCGI Service Provider](https://wiki.shibboleth.net/confluence/display/SHIB2/NativeSPFastCGIConfig) deployed [alongside nginx](https://github.com/nginx-shib/nginx-http-shibboleth)
 1. [LDAP](ldap) service, providing directory services to the IdP
 1. [Certificate Authority](ca) configuration, which is used to create CA-issued certificates for a configured domain
 
@@ -18,17 +17,6 @@ The software run by this image is the off-the-shelf [Shibboleth IdP](https://shi
 The [idp](idp) does quite a lot in its build script prior to the `docker-compose build` step. In particular, it runs the [init-idp.sh](idp/bin/init-idp.sh) script, which creates the `customized-shibboleth-idp` directory for modification. The configuration is modified to enable Single Log Out (SLO) functionality and to replace the keys used to encrypt the SSL connections, and for data encryption and signing (see [Certificate Authority](#certificate-authority), below).
 
 More details about the IdP service can be found in its [README](idp/README.md).
-
-Nginx with Shibboleth Support
-------------------------------
-
-The [nginx](nginx) container provides a build of [nginx](https://www.nginx.com) that has the [nginx-shibboleth module](https://github.com/nginx-shib/nginx-http-shibboleth) enabled. This uses the [Shibboleth FastCGI Service Provider](https://wiki.shibboleth.net/confluence/display/SHIB2/NativeSPFastCGIConfig) that is hosted alongside `nginx` in the same container, in order to provide Shibboleth authentication functionality.
-
-This container overrides the [dev/nginx](../dev/nginx) container and extends the [virtualstaticvoid/shibboleth-nginx](https://hub.docker.com/r/virtualstaticvoid/shibboleth-nginx/) image, which has Debian Wheezy as its base OS.
-
-Because `systemd` doesn't work well within containers, [supervisord](http://supervisord.org/) is used to run the Shibboleth and Nginx services.
-
-More information can be found in the [README](nginx/README.md).
 
 LDAP Service
 -------------
