@@ -14,7 +14,7 @@ services:
   idp:
     image: "arkivum/shibboleth-idp:${DOMAIN_NAME}"
     build:
-      context: "./am-shib/build/idp/"
+      context: "./shib-local/build/idp/"
     container_name: "idp.${DOMAIN_NAME}"
     hostname: "idp"
     domainname: "${DOMAIN_NAME}"
@@ -42,8 +42,6 @@ services:
       # Jetty customizations
       - "${VOL_BASE}/shib-local/etc/idp/jetty/backchannel.ini:/opt/shib-jetty-base/start.d/backchannel.ini:ro"
       - "${VOL_BASE}/shib-local/etc/idp/jetty/ssl.ini:/opt/shib-jetty-base/start.d/ssl.ini:ro"
-      # Provide our own IdP metadata file, configured for our SPs
-      
       # Configure secrets
       - "${VOL_BASE}/shib-local/build/secrets/idp/:/secrets/"
       # Load bootstrap script
