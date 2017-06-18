@@ -166,8 +166,10 @@ services:
       dockerfile: "dashboard.Dockerfile"
     environment:
       FORWARDED_ALLOW_IPS: "*"  # Specific to Gunicorn
+      AM_GUNICORN_ACCESSLOG: "${AM_GUNICORN_ACCESSLOG}"
       AM_GUNICORN_RELOAD: "${AM_GUNICORN_RELOAD}"
       AM_GUNICORN_RELOAD_ENGINE: "${AM_GUNICORN_RELOAD_ENGINE}"
+      AM_GUNICORN_WORKERS: "${AM_GUNICORN_WORKERS}"
       DJANGO_SETTINGS_MODULE: "settings.local"
       ARCHIVEMATICA_DASHBOARD_DASHBOARD_DJANGO_SECRET_KEY: "12345"
       ARCHIVEMATICA_DASHBOARD_DASHBOARD_DJANGO_ALLOWED_HOSTS: "*"
@@ -194,8 +196,10 @@ services:
       context: "../src/archivematica-storage-service"
     environment:
       FORWARDED_ALLOW_IPS: "*"  # Specific to Gunicorn
+      SS_GUNICORN_ACCESSLOG: "${SS_GUNICORN_ACCESSLOG}"
       SS_GUNICORN_RELOAD: "${SS_GUNICORN_RELOAD}"
       SS_GUNICORN_RELOAD_ENGINE: "${SS_GUNICORN_RELOAD_ENGINE}"
+      SS_GUNICORN_WORKERS: "${SS_GUNICORN_WORKERS}"
       DJANGO_SECRET_KEY: "12345"
       DJANGO_SETTINGS_MODULE: "storage_service.settings.local"
       DJANGO_ALLOWED_HOSTS: "*"
