@@ -11,7 +11,7 @@ DOCKER_BUILD_UID ?= $(shell id -u)
 
 DOMAIN_NAME ?= example.ac.uk
 
-IDP_EXTERNAL_PORT ?= 443
+IDP_EXTERNAL_PORT ?= 6443
 
 all: destroy init-ca build create-secrets up bootstrap list
 
