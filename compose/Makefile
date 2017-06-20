@@ -30,7 +30,7 @@ all: destroy build create-secrets up bootstrap list
 bootstrap create-secrets:
 	$(foreach DIR, $(COMPOSE_DIRS), $(MAKE) -C $(DIR) $@ ;)
 
-build destroy:
+build clean destroy:
 	# Process each of the relevant compose dirs
 	$(foreach DIR, $(COMPOSE_DIRS), $(MAKE) -C $(DIR) $@ ;)
 	@sleep 10
@@ -58,4 +58,4 @@ watch-idp:
 watch-nginx:
 	docker-compose logs -f nginx
 
-.PHONY: all bootstrap build create-secrets config destroy list watch watch-idp watch-nginx up
+.PHONY: all bootstrap build clean create-secrets config destroy list watch watch-idp watch-nginx up

@@ -134,7 +134,8 @@ Here are some other `make` commands other than `make all` that may be useful whe
 
 | Command | Description |
 |---|---|
-| `make destroy` | Tear down all the containers and clean build directories. |
+| `make clean` | Remove all build-generated files. |
+| `make destroy` | Tear down all running containers for the configured compose set. |
 | `make list` | List all running containers (using `docker-compose ps`) |
 | `make watch` | Watch logs from all containers |
 | `make watch-idp` | Watch logs from the [idp](shib-local/idp) container, if present |

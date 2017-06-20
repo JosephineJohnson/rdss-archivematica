@@ -57,6 +57,9 @@ build-idp:
 # This is needed by upstream makefile
 bootstrap:
 
+clean:
+	rm -Rf "$(BASE_DIR)/build"
+
 create-secrets:
 	# Create the secrets dir for the IdP, ensuring it's within the docker build context
 	@docker run --rm \
@@ -78,7 +81,7 @@ create-secrets:
 destroy:
 	@mkdir -p "$(BASE_DIR)/build/idp/"
 	# Stop containers and remove volumes
-	COMPOSE_FILE=$(COMPOSE_FILE) docker-compose down --volumes
+	COMPOSE_FILE=$(DEFAULT_COMPOSE_FILE) docker-compose down --volumes
 
 init-ca:
 	# Initialise the Certificate Authority. We do this within a docker container
@@ -101,4 +104,4 @@ nuke-ca:
 		rawmind/alpine-base:3.5-1 \
 		./nuke.sh
 
-.PHONY: all bootstrap build destroy init-ca nuke-ca
+.PHONY: all bootstrap build clean destroy init-ca nuke-ca

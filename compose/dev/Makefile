@@ -9,10 +9,6 @@ COMPOSE_FILE ?= "${DEFAULT_COMPOSE_FILE}"
 all: destroy bootstrap
 	docker-compose ps
 
-destroy:
-	docker-compose stop
-	docker-compose down --volumes
-
 build:
 	# Specify compose file explicitly, we don't want to build any other container sets
 	COMPOSE_FILE=$(DEFAULT_COMPOSE_FILE) docker-compose build
@@ -73,6 +69,9 @@ config:
 
 # This does nothing but is required by the parent makefile
 create-secrets:
+
+destroy:
+	COMPOSE_FILE=$(DEFAULT_COMPOSE_FILE) docker-compose down --volumes
 
 list:
 	docker-compose ps
