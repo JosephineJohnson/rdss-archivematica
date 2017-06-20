@@ -20,7 +20,7 @@ services:
       - "${VOL_BASE}/dev/etc/minio:/root/.minio"
       - "${VOL_BASE}/dev/s3:/export"
     ports:
-      - "9000"
+      - "50500:9000"
     expose:
       - "9000"
 
@@ -282,4 +282,4 @@ services:
     volumes:
       - "${VOL_BASE}/../src/rdss-archivematica-msgcreator:/go/src/github.com/JiscRDSS/rdss-archivematica-msgcreator"
     ports:
-      - "8000"
+      - "50501:8000"
