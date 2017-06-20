@@ -1,8 +1,0 @@
-{
-  "am-dashboard" : {
-    "metadata": "https://archivematica.${DOMAIN_NAME}/Shibboleth.sso/metadata"
-  },
-  "am-storage-service" : {
-    "metadata": "https://archivematica.${DOMAIN_NAME}:8443/Shibboleth.sso/metadata"
-  }
-}

@@ -5,12 +5,17 @@ COMPOSE_DIRS=dev
 
 BASE_DIR ?= ${CURDIR}
 
+SHIBBOLETH_IDP ?= local
+
 # Do we want to include any shibboleth services?
-ifeq ("$(SHIBBOLETH_CONFIG)", "archivematica")
-	override COMPOSE_DIRS += am-shib
-else ifeq ("$(SHIBBOLETH_CONFIG)", "example")
-	# Only build example services, not Archivematica
-	override COMPOSE_DIRS = example-shib
+ifdef SHIBBOLETH_CONFIG
+	ifeq ("$(SHIBBOLETH_CONFIG)", "archivematica")
+		override COMPOSE_DIRS += am-shib
+	endif
+	# Do we need to use our local IdP service?
+	ifeq ("$(SHIBBOLETH_IDP)", "local")
+		override COMPOSE_DIRS += shib-local
+	endif
 endif
 
 # Set the docker-compose COMPOSE_FILE env var to include the config from each
@@ -20,29 +25,29 @@ override COMPOSE_FILE ?= $(shell echo \
 	| tr ' ' ':')
 export COMPOSE_FILE
 
-all: destroy build up bootstrap list
+all: destroy build create-secrets up bootstrap list
 
-bootstrap:
+bootstrap create-secrets:
 	$(foreach DIR, $(COMPOSE_DIRS), $(MAKE) -C $(DIR) $@ ;)
 
-build destroy:
-	# Process the common shib dir first
-	if [ "$(SHIBBOLETH_CONFIG)" != "" ] ; then \
-		$(MAKE) -C shib $@ ; \
-	fi
+build clean destroy:
 	# Process each of the relevant compose dirs
 	$(foreach DIR, $(COMPOSE_DIRS), $(MAKE) -C $(DIR) $@ ;)
 	@sleep 10
 
 config:
-	$(foreach DIR, $(COMPOSE_DIRS), $(MAKE) -C $(DIR) $@ ;)
-	@sleep 10
+	docker-compose config
 
 list:
 	docker-compose ps
 
 up:
 	docker-compose up -d
+	
+validate:
+	@echo "SHIBBOLETH_CONFIG = $(SHIBBOLETH_CONFIG)"
+	@echo "SHIBBOLETH_IDP = $(SHIBBOLETH_IDP)"
+	@echo "COMPOSE_DIRS = $(COMPOSE_DIRS)"
 
 watch:
 	docker-compose logs -f
@@ -53,7 +58,4 @@ watch-idp:
 watch-nginx:
 	docker-compose logs -f nginx
 
-watch-sp:
-	docker-compose logs -f example-sp
-
-.PHONY: all bootstrap build config destroy list watch watch-idp watch-sp up
+.PHONY: all bootstrap build clean create-secrets config destroy list watch watch-idp watch-nginx up

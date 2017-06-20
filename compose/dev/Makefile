@@ -9,10 +9,6 @@ COMPOSE_FILE ?= "${DEFAULT_COMPOSE_FILE}"
 all: destroy bootstrap
 	docker-compose ps
 
-destroy:
-	docker-compose stop
-	docker-compose down --volumes
-
 build:
 	# Specify compose file explicitly, we don't want to build any other container sets
 	COMPOSE_FILE=$(DEFAULT_COMPOSE_FILE) docker-compose build
@@ -71,6 +67,12 @@ bootstrap-dashboard:
 config:
 	docker-compose config
 
+# This does nothing but is required by the parent makefile
+create-secrets:
+
+destroy:
+	COMPOSE_FILE=$(DEFAULT_COMPOSE_FILE) docker-compose down --volumes
+
 list:
 	docker-compose ps
 
@@ -89,4 +91,4 @@ watch-am:
 watch-ss:
 	docker-compose logs -f archivematica-storage-service
 
-.PHONY: default destroy bootstrap build bootstrap-dashboard bootstrap-storage-service config list restart-mcp-services
+.PHONY: default destroy bootstrap build bootstrap-dashboard bootstrap-storage-service config create-secrets list restart-mcp-services

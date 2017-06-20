@@ -1,0 +1,83 @@
+---
+version: "2"
+
+volumes:
+
+  ldap_conf:
+  ldap_data:
+
+  idp_logs:
+
+services:
+
+  # Shibboleth IdP service for the domain
+  idp:
+    image: "arkivum/shibboleth-idp:${DOMAIN_NAME}"
+    build:
+      context: "./shib-local/build/idp/"
+    container_name: "idp.${DOMAIN_NAME}"
+    hostname: "idp"
+    domainname: "${DOMAIN_NAME}"
+    networks:
+      - "shibnet"
+    environment:
+      DOMAIN_NAME: "${DOMAIN_NAME}"
+      JETTY_BROWSER_SSL_KEYSTORE_PASSWORD: "12345"
+      JETTY_BACKCHANNEL_SSL_KEYSTORE_PASSWORD: "12345"
+      # Deployment settings
+      AM_DASHBOARD_EXTERNAL_PORT: "${AM_DASHBOARD_EXTERNAL_PORT}"
+      AM_STORAGE_SERVICE_EXTERNAL_PORT: "${AM_STORAGE_SERVICE_EXTERNAL_PORT}"
+      IDP_EXTERNAL_PORT: "${IDP_EXTERNAL_PORT}"
+    volumes:
+      - "idp_logs:/opt/shibboleth-idp/logs"
+      # Shibboleth IdP customizations
+      - "${VOL_BASE}/shib-local/etc/idp/attribute-filter.xml:/opt/shibboleth-idp/conf/attribute-filter.xml:ro"
+      - "${VOL_BASE}/shib-local/etc/idp/attribute-resolver.xml:/opt/shibboleth-idp/conf/attribute-resolver.xml:ro"
+      - "${VOL_BASE}/shib-local/etc/idp/images/:/opt/shibboleth-idp/webapp/images/:ro"
+      - "${VOL_BASE}/shib-local/etc/idp/ldap.properties:/opt/shibboleth-idp/conf/ldap.properties:ro"
+      - "${VOL_BASE}/shib-local/etc/idp/messages/:/opt/shibboleth-idp/messages/:ro"
+      - "${VOL_BASE}/shib-local/build/idp/customized-shibboleth-idp/conf/idp.properties:/opt/shibboleth-idp/conf/idp.properties:ro"
+      - "${VOL_BASE}/shib-local/build/idp/customized-shibboleth-idp/metadata/idp-metadata.xml:/opt/shibboleth-idp/metadata/idp-metadata.xml:ro"
+      - "${VOL_BASE}/shib-local/build/idp/metadata-providers.xml:/opt/shibboleth-idp/conf/metadata-providers.xml:ro"
+      # Jetty customizations
+      - "${VOL_BASE}/shib-local/etc/idp/jetty/backchannel.ini:/opt/shib-jetty-base/start.d/backchannel.ini:ro"
+      - "${VOL_BASE}/shib-local/etc/idp/jetty/ssl.ini:/opt/shib-jetty-base/start.d/ssl.ini:ro"
+      # Configure secrets
+      - "${VOL_BASE}/shib-local/build/secrets/idp/:/secrets/"
+      # Load bootstrap script
+      - "${VOL_BASE}/shib-local/idp/bootstrap.sh:/usr/sbin/bootstrap.sh:ro"
+    command: /bin/sh -c "bootstrap.sh && run-jetty.sh"
+    expose:
+      - "4443"
+      - "8443"
+    ports:
+      - "${IDP_EXTERNAL_IP}:${IDP_EXTERNAL_PORT}:4443"
+    depends_on:
+      - "ldap"
+    links:
+      - "ldap:ldap.${DOMAIN_NAME}"
+
+  # LDAP service for the domain
+  ldap:
+    image: "osixia/openldap:${DOMAIN_NAME}"
+    build:
+      context: "./shib-local/ldap"
+    hostname: "ldap"
+    domainname: "${DOMAIN_NAME}"
+    networks:
+      - "shibnet"
+    environment:
+      LDAP_DOMAIN: "${DOMAIN_NAME}"
+      LDAP_ORGANISATION: "${DOMAIN_ORGANISATION}"
+      LDAP_TLS: "false"
+    volumes:
+      - "ldap_conf:/etc/ldap/"
+      - "ldap_data:/var/lib/ldap/"
+      - "${VOL_BASE}/shib-local/etc/ldap/edu/:/src/ldap/edu/:ro"
+      - "${VOL_BASE}/shib-local/etc/ldap/demo-users.ldif.tpl:/src/ldap/users.ldif.tpl:ro"
+    expose:
+      - "389"
+
+networks:
+  shibnet:
+    driver: "bridge"
