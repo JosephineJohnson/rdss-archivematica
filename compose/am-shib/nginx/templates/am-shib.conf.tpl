@@ -68,6 +68,8 @@ server {
 		proxy_read_timeout 172800s;
 		proxy_pass $upstream_endpoint;
 	}
+
+	include /etc/nginx/incs/msgcreator.inc;
 }
 
 #

@@ -77,6 +77,7 @@ services:
     image: "nginx:stable-alpine"
     volumes:
       - "${VOL_BASE}/dev/etc/nginx/nginx.conf:/etc/nginx/nginx.conf:ro"
+      - "${VOL_BASE}/dev/etc/nginx/incs/:/etc/nginx/incs/:ro"
       - "${VOL_BASE}/dev/etc/nginx/conf.d/archivematica.conf:/etc/nginx/conf.d/archivematica.conf:ro"
       - "${VOL_BASE}/dev/etc/nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf:ro"
     expose:
@@ -276,10 +277,10 @@ services:
   rdss-archivematica-msgcreator:
     build:
       context: "../src/rdss-archivematica-msgcreator"
-    entrypoint: "go run main.go -addr=0.0.0.0:8000 -kinesis-endpoint=http://minikine:4567 -kinesis-stream=main -kinesis-region=eu-west-2 -s3-access-key=AKIAIOSFODNN7EXAMPLE -s3-secret-key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY -s3-region=eu-west-2 -s3-endpoint=https://minio:9000"
+    entrypoint: "go run main.go -addr=0.0.0.0:8000 -prefix=/msgcreator -kinesis-endpoint=http://minikine:4567 -kinesis-stream=main -kinesis-region=eu-west-2 -s3-access-key=AKIAIOSFODNN7EXAMPLE -s3-secret-key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY -s3-region=eu-west-2 -s3-endpoint=https://minio:9000"
     links:
       - "minikine"
     volumes:
       - "${VOL_BASE}/../src/rdss-archivematica-msgcreator:/go/src/github.com/JiscRDSS/rdss-archivematica-msgcreator"
-    ports:
-      - "50501:8000"
+    expose:
+      - "8000"
