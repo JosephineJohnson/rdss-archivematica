@@ -21,25 +21,22 @@ To allow Archivematica to interact and share data with other systems in the envi
 | `archivematica_pipeline_data` | Used to store data shared across Archivematica components. Also used by external systems to input data to Archivematica, and to retrieve outputs from Archivematica (`www/AIPsStore` and `www/DIPsStore`). |
 | `archivematica_storage_service_default_location_data` | Used to provide data storage for the Storage Service. Making this external allows other systems to input data into Archivematica. |
 
-To create volumes for directories on the local machine, i.e. in a development environment, use
+To create volumes for directories on the local machine use
 
-	make create-local-volumes
-
-To create volumes for directories on a NFS server, i.e. in a QA or production environment, use
-
-	make create-nfs-volumes NFS_SERVER=192.168.0.1
-
-The `NFS_SERVER` is required - there's no way to guess it or use a sensible default.
+	make create-volumes
 
 The parameters for the volumes created are as follows, and may be overridden via Makefile arguments:
 
 | Parameter | Description | Default |
 |---|---|---|
-| `AM_PIPELINE_DATA` | The *local* path on the docker host to use for Archivematica's `sharedDirectory` pipeline data. | `$(BASE_DIR)/vols/am-pipeline-data`
-| `SS_DEFAULT_LOCATION_DATA` | The *local* path on the docker host to use for Archivematica's default location in the Storage Service. | `$(BASE_DIR)/../src` |
-| `NFS_SERVER` | The IP address of the NFS server to use for the NFS volumes. This value is required. | N/A |
-| `NFS_AM_PIPELINE_DATA` | The *remote* path on the NFS server to use for Archivematica's `sharedDirectory` pipeline data. | `/am-pipeline-data` |
-| `NFS_SS_DEFAULT_LOCATION_DATA` | The *remote* path on the NFS server to use for Archivematica's default location in the Storage Service. |
+| `AM_PIPELINE_DATA` | The path on the docker host to use for Archivematica's `sharedDirectory` pipeline data. | `/tmp/am-pipeline-data`
+| `SS_LOCATION_DATA` | The path on the docker host to use for Archivematica's default location in the Storage Service. | `$(BASE_DIR)/../src` |
+
+For example, to use NFS mounts instead of the default locations
+
+	make create-volumes \
+		AM_PIPELINE_DATA=/mnt/nfs/am-pipeline-data \
+		SS_LOCATION_DATA=/mnt/nfs/am-ss-default-location-data
 
 Service Sets
 -------------
@@ -183,11 +180,9 @@ The following environment variables are supported by this build.
 
 | Variable | Description |
 |---|---|
-| `AM_PIPELINE_DATA_VOLUME` | The named Docker volume to use for Archivematica pipeline data. This is an external volume that is expected to be created prior to the containers being instantiated (see [External Volumes](#externalvolumes) above). Valid values are `local_am-pipeline-data` (default) or `nfs_am-pipeline-data`. |
 | `DOMAIN_NAME` | The domain name to use when configuring Shibboleth. |
 | `SHIBBOLETH_CONFIG` | The Shibboleth profile to use. Currently only `archivematica` is supported. Default is undefined, causing no Shibboleth support to be enabled. |
 | `SHIBBOLETH_IDP` | The shibboleth IdP profile to use. Currently only `local` is supported, which is the default if `SHIBBOLETH_CONFIG` is set. Setting to another value will prevent the local Shibboleth IdP ([shib-local](shib-local)) from being included. |
-| `SS_DEFAULT_LOCATION_DATA_VOLUME` | The named Docker volume to use for Archivematica Storage Service default location data. This is an external volume that is expected to be created prior to the containers being instantiated (see [External Volumes](#externalvolumes) above). Valid values are `local_ss-default-location-data` (default) or `nfs_ss-default-location-data`. |
 | `VOL_BASE` | The path to use as the base for specifying volume paths in `docker-compose` configurations. Default is `'.'`, which gets correctly interpreted when build machine is the same as docker host. When deploying to a remote docker host (e.g. via `docker-machine`), this must be set to the path of the equivalent base path on the docker host, e.g. `/home/ubuntu/rdss-archivematica/compose` if using a standard Ubuntu AMI on EC2). |
 
 See also the individual [idp](shib-local/idp), [ldap](shib-local/ldap) and [nginx](am-shib/nginx) services for additional environment variables used by those specific services.
