@@ -75,6 +75,7 @@ The following environment variables are used by this service:
 | AM_STORAGE_SERVICE_EXTERNAL_PORT | The external port that the Archivematica Storage Service should be exposed on. Default is 8443 |
 | DOMAIN_NAME | The domain name to use for this IdP. This becomes the Shibboleth "scope", i.e. the domain that is 'managed' by this IdP. Default value is `example.ac.uk` |
 | IDP_EXTERNAL_PORT | The external port that the IdP is exposed on. Default is 6443. |
+| NGINX_HOSTNAME | The hostname of the `nginx` service, which is expected to be proxying the Archivematica Dashboard and Storage Service. Default value is `archivematica.example.ac.uk`. |
 
 UI Customization
 -----------------
