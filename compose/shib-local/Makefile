@@ -13,6 +13,8 @@ DOMAIN_NAME ?= example.ac.uk
 
 IDP_EXTERNAL_PORT ?= 6443
 
+NGINX_HOSTNAME ?= archivematica.$(DOMAIN_NAME)
+
 all: destroy init-ca build create-secrets up bootstrap list
 
 build: build-idp
@@ -31,6 +33,7 @@ build-idp:
 		--volume "$(VOL_BASE)/shib-local/etc/idp/:/src/etc/:ro" \
 		--volume "$(VOL_BASE)/shib-local/build/idp/:/build" \
 		--workdir "/src" \
+		-e NGINX_HOSTNAME=$(NGINX_HOSTNAME) \
 		python:2-alpine \
 		python idp-metadata-providers.py /src/etc/service-providers.json > \
 			"$(BASE_DIR)/build/idp/metadata-providers.xml"

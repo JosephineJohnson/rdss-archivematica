@@ -1,8 +1,8 @@
 {
   "am-dashboard" : {
-    "metadata": "https://archivematica.${DOMAIN_NAME}:${AM_DASHBOARD_EXTERNAL_PORT}/Shibboleth.sso/metadata"
+    "metadata": "https://${NGINX_HOSTNAME}:${AM_DASHBOARD_EXTERNAL_PORT}/Shibboleth.sso/metadata"
   },
   "am-storage-service" : {
-    "metadata": "https://archivematica.${DOMAIN_NAME}:${AM_STORAGE_SERVICE_EXTERNAL_PORT}/Shibboleth.sso/metadata"
+    "metadata": "https://${NGINX_HOSTNAME}:${AM_STORAGE_SERVICE_EXTERNAL_PORT}/Shibboleth.sso/metadata"
   }
 }
