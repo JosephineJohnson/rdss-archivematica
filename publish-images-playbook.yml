@@ -32,7 +32,7 @@
         path: "./src/archivematica/src/"
         dockerfile: "MCPClient.Dockerfile"
         tag: "latest"
-      - name: "{{ registry }}archivematica-mcp-dashboard"
+      - name: "{{ registry }}archivematica-dashboard"
         path: "./src/archivematica/src/"
         dockerfile: "dashboard.Dockerfile"
         tag: "latest"
