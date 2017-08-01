@@ -7,6 +7,7 @@
 /src/archivematica-sampledata
 /src/rdss-archivematica-channel-adapter
 /src/rdss-archivematica-msgcreator
+/src/rdss-arkivum-nextcloud
 
 # Terraform compiled files
 *.tfstate

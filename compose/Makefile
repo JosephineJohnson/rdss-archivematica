@@ -6,8 +6,10 @@ COMPOSE_DIRS=dev
 BASE_DIR ?= ${CURDIR}
 
 # Paths for Docker named volumes
-AM_PIPELINE_DATA ?= /tmp/am-pipeline-data
-SS_LOCATION_DATA ?= $(BASE_DIR)/../src
+AM_PIPELINE_DATA ?= /tmp/rdss/am-pipeline-data
+ARK_STORAGE_DATA ?= /tmp/rdss/arkivum-storage
+JISC_TEST_DATA ?= /tmp/rdss/jisc-test-data
+SS_LOCATION_DATA ?= /tmp/rdss/am-ss-location-data
 
 # Do we want to include any shibboleth services?
 SHIBBOLETH_IDP ?= local
@@ -19,6 +21,11 @@ ifdef SHIBBOLETH_CONFIG
 	ifeq ("$(SHIBBOLETH_IDP)", "local")
 		override COMPOSE_DIRS += shib-local
 	endif
+endif
+
+# Do we want to include the nextcloud services?
+ifeq ("$(NEXTCLOUD_ENABLED)", "true")
+	override COMPOSE_DIRS += nextcloud
 endif
 
 # Set the docker-compose COMPOSE_FILE env var to include the config from each
@@ -42,12 +49,21 @@ config:
 	docker-compose config
 
 create-volumes:
-	mkdir -p ${AM_PIPELINE_DATA}
-	docker volume create --opt type=none --opt o=bind \
+	# Create Archivematica named volumes
+	@mkdir -p ${AM_PIPELINE_DATA}
+	@docker volume create --opt type=none --opt o=bind \
 		--opt device=$(AM_PIPELINE_DATA) rdss_am-pipeline-data
-	mkdir -p ${SS_LOCATION_DATA}
-	docker volume create --opt type=none --opt o=bind \
+	@mkdir -p ${SS_LOCATION_DATA}/automated ${SS_LOCATION_DATA}/interactive
+	@docker volume create --opt type=none --opt o=bind \
 		--opt device=$(SS_LOCATION_DATA) rdss_am-ss-location-data
+	# Create Arkivum named volumes
+	@mkdir -p ${ARK_STORAGE_DATA}/aipingest
+	@docker volume create --opt type=none --opt o=bind \
+		--opt device=$(ARK_STORAGE_DATA) rdss_arkivum-storage
+	# Create Jisc named volumes
+	@mkdir -p ${JISC_TEST_DATA}
+	@docker volume create --opt type=none --opt o=bind \
+		--opt device=$(JISC_TEST_DATA) rdss_jisc-test-research-data
 
 list:
 	docker-compose ps
