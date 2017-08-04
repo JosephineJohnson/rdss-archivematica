@@ -125,6 +125,22 @@ services:
     expose:
       - "4567"
 
+  archivematica-automation-tools:
+    build: '../src/rdss-archivematica-automation-tools/'
+    environment:
+      AM_TOOLS_TRANSFER_AM_API_KEY: "test"
+      AM_TOOLS_TRANSFER_AM_URL: "http://archivematica"
+      AM_TOOLS_TRANSFER_AM_USER: "test"
+      AM_TOOLS_TRANSFER_SOURCE_DESCRIPTION: "automated workflow"
+      AM_TOOLS_TRANSFER_SS_API_KEY: "test"
+      AM_TOOLS_TRANSFER_SS_URL: "http://archivematica-storage-service:8000"
+      AM_TOOLS_TRANSFER_SS_USER: "test"
+    volumes:
+      - "archivematica_pipeline_data:/var/archivematica/sharedDirectory"
+    links:
+      - "archivematica-dashboard"
+      - "archivematica-storage-service"
+
   archivematica-mcp-server:
     build:
       context: "../src/archivematica/src"

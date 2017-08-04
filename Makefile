@@ -5,7 +5,13 @@ AD_BRANCH := "master"
 
 build: build-images
 
-build-images: build-image-dashboard build-image-mcpserver build-image-mcpclient build-image-storage-service build-image-nextcloud
+build-images: build-image-dashboard build-image-mcpserver build-image-mcpclient build-image-storage-service build-image-automation-tools build-image-nextcloud
+
+build-image-automation-tools:
+	docker build --rm --pull \
+		--tag rdss-archivematica-automation-tools:latest \
+		-f $(ROOT_DIR)/src/archivematica-automation-tools/Dockerfile \
+			$(ROOT_DIR)/src/archivematica-automation-tools/
 
 build-image-dashboard:
 	docker build --rm --pull \
@@ -46,3 +52,4 @@ clone:
 	-git clone git@github.com:JiscRDSS/rdss-archivematica-msgcreator.git $(ROOT_DIR)/src/rdss-archivematica-msgcreator
 	-git clone --depth 1 --recursive --branch master https://github.com/artefactual/archivematica-sampledata.git $(ROOT_DIR)/src/archivematica-sampledata
 	-git clone git@github.com:JiscRDSS/rdss-arkivum-nextcloud.git $(ROOT_DIR)/src/rdss-arkivum-nextcloud
+	-git clone --recursive git@github.com:JiscRDSS/rdss-archivematica-automation-tools.git $(ROOT_DIR)/src/rdss-archivematica-automation-tools

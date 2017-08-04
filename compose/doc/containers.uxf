@@ -4,7 +4,7 @@
     <id>UMLDeployment</id>
     <coordinates>
       <x>189</x>
-      <y>63</y>
+      <y>54</y>
       <w>153</w>
       <h>189</h>
     </coordinates>
@@ -18,7 +18,7 @@ group=14</panel_attributes>
     <id>UMLGeneric</id>
     <coordinates>
       <x>198</x>
-      <y>117</y>
+      <y>108</y>
       <w>126</w>
       <h>36</h>
     </coordinates>
@@ -33,7 +33,7 @@ group=14</panel_attributes>
     <id>UMLGeneric</id>
     <coordinates>
       <x>198</x>
-      <y>162</y>
+      <y>153</y>
       <w>126</w>
       <h>36</h>
     </coordinates>
@@ -49,7 +49,7 @@ group=14</panel_attributes>
     <id>UMLDeployment</id>
     <coordinates>
       <x>9</x>
-      <y>63</y>
+      <y>54</y>
       <w>153</w>
       <h>126</h>
     </coordinates>
@@ -62,7 +62,7 @@ bg=#d0f0c5</panel_attributes>
     <id>UMLGeneric</id>
     <coordinates>
       <x>18</x>
-      <y>108</y>
+      <y>99</y>
       <w>126</w>
       <h>72</h>
     </coordinates>
@@ -77,7 +77,7 @@ layer=1</panel_attributes>
     <id>UMLGeneric</id>
     <coordinates>
       <x>405</x>
-      <y>117</y>
+      <y>108</y>
       <w>126</w>
       <h>72</h>
     </coordinates>
@@ -92,9 +92,9 @@ layer=1</panel_attributes>
     <id>UMLDeployment</id>
     <coordinates>
       <x>369</x>
-      <y>63</y>
+      <y>54</y>
       <w>216</w>
-      <h>135</h>
+      <h>144</h>
     </coordinates>
     <panel_attributes>&lt;&lt;Container&gt;&gt;
 archivematica-dashboard
@@ -105,7 +105,7 @@ bg=#ffe7bd</panel_attributes>
     <id>UMLGeneric</id>
     <coordinates>
       <x>414</x>
-      <y>153</y>
+      <y>144</y>
       <w>108</w>
       <h>27</h>
     </coordinates>
@@ -159,7 +159,7 @@ layer=2</panel_attributes>
     <id>UMLGeneric</id>
     <coordinates>
       <x>198</x>
-      <y>207</y>
+      <y>198</y>
       <w>126</w>
       <h>36</h>
     </coordinates>
@@ -188,9 +188,9 @@ layer=1</panel_attributes>
     <id>UMLDeployment</id>
     <coordinates>
       <x>603</x>
-      <y>63</y>
+      <y>54</y>
       <w>216</w>
-      <h>135</h>
+      <h>108</h>
     </coordinates>
     <panel_attributes>&lt;&lt;Container&gt;&gt;
 archivematica-mcp-client
@@ -201,7 +201,7 @@ bg=#ffe7bd</panel_attributes>
     <id>UMLGeneric</id>
     <coordinates>
       <x>612</x>
-      <y>261</y>
+      <y>225</y>
       <w>189</w>
       <h>36</h>
     </coordinates>
@@ -215,9 +215,9 @@ layer=1</panel_attributes>
     <id>UMLDeployment</id>
     <coordinates>
       <x>603</x>
-      <y>207</y>
+      <y>171</y>
       <w>216</w>
-      <h>144</h>
+      <h>108</h>
     </coordinates>
     <panel_attributes>&lt;&lt;Container&gt;&gt;
 archivematica-mcp-server
@@ -388,7 +388,7 @@ group=23</panel_attributes>
     <id>UMLDeployment</id>
     <coordinates>
       <x>9</x>
-      <y>198</y>
+      <y>189</y>
       <w>153</w>
       <h>54</h>
     </coordinates>
@@ -493,7 +493,7 @@ bg=#d0f0c5</panel_attributes>
     <id>UMLGeneric</id>
     <coordinates>
       <x>27</x>
-      <y>144</y>
+      <y>135</y>
       <w>108</w>
       <h>27</h>
     </coordinates>
@@ -525,6 +525,19 @@ bg=#d490b3</panel_attributes>
     <panel_attributes>&lt;&lt;Container&gt;&gt;
 nextcloud
 bg=#d490b3</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLDeployment</id>
+    <coordinates>
+      <x>603</x>
+      <y>288</y>
+      <w>216</w>
+      <h>63</h>
+    </coordinates>
+    <panel_attributes>&lt;&lt;Container&gt;&gt;
+automation-tools
+bg=#ffe7bd</panel_attributes>
     <additional_attributes/>
   </element>
 </diagram>
