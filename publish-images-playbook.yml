@@ -100,4 +100,5 @@
         dockerfile: "{{ item.dockerfile }}"
         push: "yes"
         state: "present"
+        force: "yes"
       with_items: "{{ images }}"
