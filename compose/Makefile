@@ -9,6 +9,7 @@ BASE_DIR ?= ${CURDIR}
 AM_PIPELINE_DATA ?= /tmp/rdss/am-pipeline-data
 ARK_STORAGE_DATA ?= /tmp/rdss/arkivum-storage
 JISC_TEST_DATA ?= /tmp/rdss/jisc-test-data
+MINIO_EXPORT_DATA ?= /tmp/rdss/minio-export-data
 SS_LOCATION_DATA ?= /tmp/rdss/am-ss-location-data
 
 # Do we want to include any shibboleth services?
@@ -64,6 +65,11 @@ create-volumes:
 	@mkdir -p ${JISC_TEST_DATA}
 	@docker volume create --opt type=none --opt o=bind \
 		--opt device=$(JISC_TEST_DATA) rdss_jisc-test-research-data
+  # Create MINIO named volumes
+	@mkdir -p ${MINIO_EXPORT_DATA}
+	@docker volume create --opt type=none --opt o=bind \
+    --opt device=$(MINIO_EXPORT_DATA) rdss_minio_export_data
+
 
 list:
 	docker-compose ps

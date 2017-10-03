@@ -22,6 +22,7 @@ To allow Archivematica and NextCloud to interact and share data with other syste
 | `rdss_am-ss-location-data` | Used to provide data storage for the Storage Service. Making this external allows other systems to input data into Archivematica. |
 | `rdss_arkivum-storage` | Used to access storage on an Arkivum appliance (if available). |
 | `rdss_jisc-test-research-data` | Used to access the Jisc RDSS S3 bucket for test research data. |
+| `rdss_minio_export_data` | Expose the `/export` folder that Minio uses to store its data |
 
 To create volumes for directories on the local machine use
 
@@ -34,6 +35,7 @@ The parameters for the volumes created are as follows, and may be overridden via
 | `AM_PIPELINE_DATA` | The path on the docker host to use for Archivematica's `sharedDirectory` pipeline data. | `/tmp/rdss/am-pipeline-data`
 | `ARK_STORAGE_DATA` | The path on the docker host to use for Arkivum appliance storage. | `/tmp/rdss/arkivum-storage` |
 | `JISC_TEST_DATA` | The path on the docker host to use for accessing the Jisc RDSS S3 bucket for test research data. | `/tmp/rdss/jisc-test-data` |
+| `MINIO_EXPORT_DATA` | The path on the docker host to use for Minio's `/export` folder | `/tmp/rdss/minio-export-data` |
 | `SS_LOCATION_DATA` | The path on the docker host to use for Archivematica's default location in the Storage Service. | `/tmp/rdss/am-ss-location-data` |
 
 For example, to use remote mounts instead of the default locations
@@ -42,6 +44,7 @@ For example, to use remote mounts instead of the default locations
 		AM_PIPELINE_DATA=/mnt/nfs/am-pipeline-data \
 		ARK_STORAGE_DATA=/mnt/astor \
 		JISC_TEST_DATA=/mnt/s3/jisc-rdss-test-research-data \
+    MINIO_EXPORT_DATA=/mnt/nfs/minio-export-data \
 		SS_LOCATION_DATA=/mnt/nfs/am-ss-default-location-data
 
 Service Sets
