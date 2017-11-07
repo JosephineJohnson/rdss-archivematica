@@ -1,8 +1,8 @@
 ---
 
 #
-# Builds supporting RDSS Archivematica images used for QA and publishes them to
-# the given Docker registry.
+# Builds supporting RDSSARK images used for QA and publishes them to the given
+# Docker registry.
 #
 # Usage:
 #
@@ -14,29 +14,29 @@
   connection: "local"
 
   vars:
-    repos:
+
+    projects:
+
       - name: "RDSS Archivematica Channel Adapter"
         repo: "https://github.com/JiscRDSS/rdss-archivematica-channel-adapter"
         version: "v0.2.6"
         dest: "./src/rdss-archivematica-channel-adapter"
+        images:
+          - name: "{{ registry }}dynalite"
+            path: "./src/rdss-archivematica-channel-adapter/hack/minikine"
+            dockerfile: "dynalite.Dockerfile"
+          - name: "{{ registry }}minikine"
+            path: "./src/rdss-archivematica-channel-adapter/hack/minikine"
+            dockerfile: "minikine.Dockerfile"
+
       - name: "RDSS Archivematica MsgCreator"
         repo: "https://github.com/JiscRDSS/rdss-archivematica-msgcreator"
         version: "v0.1.0-rc.1"
         dest: "./src/rdss-archivematica-msgcreator"
-    images:
-      - name: "{{ registry }}rdss-archivematica-msgcreator"
-        dockerfile: "Dockerfile"
-        path: "./src/rdss-archivematica-msgcreator/"
-        tag: "latest"
-      - name: "{{ registry }}dynalite"
-        path: "./src/rdss-archivematica-channel-adapter/hack/minikine"
-        dockerfile: "dynalite.Dockerfile"
-        tag: "latest"
-      - name: "{{ registry }}minikine"
-        path: "./src/rdss-archivematica-channel-adapter/hack/minikine"
-        dockerfile: "minikine.Dockerfile"
-        tag: "latest"
-
+        images:
+          - name: "{{ registry }}rdss-archivematica-msgcreator"
+            dockerfile: "Dockerfile"
+            path: "./src/rdss-archivematica-msgcreator/"
 
   tasks:
 
@@ -51,7 +51,7 @@
         extra_args: "--user"
       with_items:
         - "setuptools"
-        - "docker-py"
+        - "docker"
 
     - name: "Clone repositories"
       git:
@@ -59,15 +59,30 @@
         repo: "{{ item.repo }}"
         dest: "{{ item.dest }}"
         version: "{{ item.version }}"
-      with_items: "{{ repos }}"
+      register: "git_clone"
+      with_items: "{{ projects }}"
 
-    - name: "Build and publish images"
-      docker_image:
-        name: "{{ item.name }}"
-        tag: "{{ item.tag }}"
-        path: "{{ item.path }}"
-        dockerfile: "{{ item.dockerfile }}"
-        push: "yes"
-        state: "present"
-        force: "yes"
-      with_items: "{{ images }}"
+    - name: "Build and tag images"
+      command: "docker build
+        -t {{ item.1.name }}:{{ item.0.item.version }}
+        -t {{ item.1.name }}:latest
+        -f {{ item.1.dockerfile }} ."
+      args:
+        chdir: "{{ item.1.path }}"
+      when: item.0.changed
+      with_subelements:
+        - "{{ git_clone.results }}"
+        - item.images
+      tags:
+        # Ignore false ANSIBLE0016 claiming this task should be a handler
+        - skip_ansible_lint
+
+    - name: "Publish images"
+      command: docker push "{{ item.1.name }}"
+      when: item.0.changed
+      with_subelements:
+        - "{{ git_clone.results }}"
+        - item.images
+      tags:
+        # Ignore false ANSIBLE0016 claiming this task should be a handler
+        - skip_ansible_lint
