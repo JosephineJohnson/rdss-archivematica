@@ -16,17 +16,23 @@ build:
 bootstrap: build bootstrap-storage-service bootstrap-dashboard restart-mcp-services
 
 bootstrap-storage-service:
-	# Wait for services to start properly to avoid race/timing problems
-	@sleep 30
+	# Wait for MySQL to be ready
+	@until docker-compose exec mysql mysql -hlocalhost -uroot -p12345 \
+		-e 'SELECT count(1) FROM mysql.user;' >/dev/null 2>&1 ; do \
+			echo "Waiting for mysql to be ready..." ; \
+			sleep 8 ; \
+	done
+	# Create Storage Service database if required and grant default access
 	docker-compose exec mysql mysql -hlocalhost -uroot -p12345 -e "\
-		DROP DATABASE IF EXISTS SS; \
-		CREATE DATABASE SS; \
+		CREATE DATABASE IF NOT EXISTS SS; \
 		GRANT ALL ON SS.* TO 'archivematica'@'%' IDENTIFIED BY 'demo';"
+	# Run Storage Service database migrations
 	docker-compose run \
 		--rm \
 		--entrypoint /src/storage_service/manage.py \
 			archivematica-storage-service \
 				migrate --noinput
+	# Add initial Storage Service user account
 	docker-compose run \
 		--rm \
 		--entrypoint /src/storage_service/manage.py \
@@ -39,17 +45,23 @@ bootstrap-storage-service:
 					--superuser
 
 bootstrap-dashboard:
-	# Wait for services to start properly to avoid race/timing problems
-	@sleep 30
+	# Wait for MySQL to be ready
+	@until docker-compose exec mysql mysql -hlocalhost -uroot -p12345 \
+		-e 'SELECT count(1) FROM mysql.user;' >/dev/null 2>&1 ; do \
+			echo "Waiting for mysql to be ready..." ; \
+			sleep 8 ; \
+	done
+	# Create Dashboard database if required and grant default access
 	docker-compose exec mysql mysql -hlocalhost -uroot -p12345 -e "\
-		DROP DATABASE IF EXISTS MCP; \
-		CREATE DATABASE MCP; \
+		CREATE DATABASE IF NOT EXISTS MCP; \
 		GRANT ALL ON MCP.* TO 'archivematica'@'%' IDENTIFIED BY 'demo';"
+	# Run Dashboard database migrations
 	docker-compose run \
 		--rm \
 		--entrypoint /src/dashboard/src/manage.py \
 			archivematica-dashboard \
 				migrate --noinput
+	# Add initial Dashboard user account
 	docker-compose run \
 		--rm \
 		--entrypoint /src/dashboard/src/manage.py \
