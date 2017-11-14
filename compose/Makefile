@@ -13,6 +13,7 @@ AM_PIPELINE_DATA ?= /tmp/rdss/am-pipeline-data
 ARK_STORAGE_DATA ?= /tmp/rdss/arkivum-storage
 JISC_TEST_DATA ?= /tmp/rdss/jisc-test-data
 MINIO_EXPORT_DATA ?= /tmp/rdss/minio-export-data
+MYSQL_DATA ?= /tmp/rdss/mysql-data
 SS_LOCATION_DATA ?= /tmp/rdss/am-ss-location-data
 SS_STAGING_DATA ?= /tmp/rdss/am-ss-staging-data
 
@@ -84,10 +85,14 @@ create-volumes:
 	@mkdir -p ${JISC_TEST_DATA}
 	@docker volume create --opt type=none --opt o=bind \
 		--opt device=$(JISC_TEST_DATA) rdss_jisc-test-research-data
-	# Create MINIO named volumes
+	# Create MINIO named volume
 	@mkdir -p ${MINIO_EXPORT_DATA}
 	@docker volume create --opt type=none --opt o=bind \
 		--opt device=$(MINIO_EXPORT_DATA) rdss_minio_export_data
+	# Create MySQL named volume
+	@mkdir -p ${MYSQL_DATA}
+	@docker volume create --opt type=none --opt o=bind \
+		--opt device=$(MYSQL_DATA) rdss_mysql_data
 
 list:
 	docker-compose ps

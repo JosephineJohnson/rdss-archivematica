@@ -1,8 +1,6 @@
 version: '2'
 
 volumes:
-  # Named volume for database persistence
-  mysql_data:
 
   # Named volumes for NextCloud persistence
   nextcloud_apps:
@@ -24,13 +22,16 @@ volumes:
   jisc-test-research-data:
     external:
       name: "rdss_jisc-test-research-data"
+  mysql_data:
+    external:
+      name: "rdss_mysql_data"
 
 services:
 
-  # This is a duplicate definition of the `mysql` service from the dev compose
+  # This is a duplicate definition of the `mysql` service from the qa compose
   # config. We could just use that, however that requires us to depend on the
-  # dev config, which isn't right in all circumstances. Therefore we repeat the
-  # definition, and if the dev config is also included then only one instance
+  # qa config, which isn't right in all circumstances. Therefore we repeat the
+  # definition, and if the qa config is also included then only one instance
   # will be created.
   mysql:
     image: "percona:5.6"
@@ -38,6 +39,7 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: "12345"
     volumes:
+      - "${VOL_BASE}/dev/etc/mysql/my.cnf:/etc/mysql/my.cnf:ro"
       - "mysql_data:/var/lib/mysql"
     expose:
       - "3306"
