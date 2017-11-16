@@ -40,8 +40,8 @@ override COMPOSE_FILE ?= $(shell echo \
 	| tr ' ' ':')
 ifeq ("$(ENV)", "dev")
 	# Include qa config because dev overrides/extends this
-	COMPOSE_FILE_2 := "$(COMPOSE_FILE):$(shell realpath ${CURDIR}/docker-compose.qa.yml)"
-	override COMPOSE_FILE="$(COMPOSE_FILE_2)"
+	COMPOSE_FILE_2 := $(COMPOSE_FILE):$(shell realpath ${CURDIR}/docker-compose.qa.yml)
+	override COMPOSE_FILE=$(COMPOSE_FILE_2)
 endif
 export COMPOSE_FILE
 
