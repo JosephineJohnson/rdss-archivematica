@@ -2,13 +2,7 @@
 *#
 *.swp
 
-/src/archivematica
-/src/archivematica-storage-service
-/src/archivematica-sampledata
-/src/rdss-archivematica-automation-tools
-/src/rdss-archivematica-channel-adapter
-/src/rdss-archivematica-msgcreator
-/src/rdss-arkivum-nextcloud
+/src/*
 
 # Terraform compiled files
 *.tfstate
