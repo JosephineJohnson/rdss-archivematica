@@ -13,7 +13,7 @@ build:
 	# Specify compose file explicitly, we don't want to build any other container sets
 	COMPOSE_FILE=$(DEFAULT_COMPOSE_FILE) docker-compose build
 
-bootstrap: build bootstrap-storage-service bootstrap-dashboard restart-mcp-services
+bootstrap: build bootstrap-storage-service bootstrap-dashboard bootstrap-dashboard-frontend restart-mcp-services
 
 bootstrap-storage-service:
 	# Wait for services to start properly to avoid race/timing problems
@@ -64,6 +64,20 @@ bootstrap-dashboard:
 					--ss-url="http://archivematica-storage-service:8000" \
 					--ss-user="test" \
 					--ss-api-key="test"
+
+bootstrap-dashboard-frontend:
+	docker-compose run --rm --no-deps \
+		--user root \
+		--entrypoint npm \
+		--workdir /src/dashboard/frontend/transfer-browser \
+			archivematica-dashboard \
+				install --unsafe-perm
+	docker-compose run --rm --no-deps \
+		--user root \
+		--entrypoint npm \
+		--workdir /src/dashboard/frontend/appraisal-tab \
+			archivematica-dashboard \
+				install --unsafe-perm
 
 config:
 	docker-compose config
