@@ -6,10 +6,17 @@ DEFAULT_COMPOSE_FILE = $(shell realpath ../docker-compose.dev.yml)
 
 COMPOSE_FILE ?= "${DEFAULT_COMPOSE_FILE}"
 
+VERSION = $(shell git describe --tags --always --dirty)
+
 all: destroy bootstrap
 	docker-compose ps
 
-build:
+versionfile:
+	@echo "\
+	version: ${VERSION}\n\
+	agent_code: ${VERSION}" > ../../src/archivematica/src/version.yml
+
+build: versionfile
 	# Specify compose file explicitly, we don't want to build any other container sets
 	COMPOSE_FILE=$(DEFAULT_COMPOSE_FILE) docker-compose build
 
@@ -50,6 +57,11 @@ bootstrap-dashboard:
 		--entrypoint /src/dashboard/src/manage.py \
 			archivematica-dashboard \
 				migrate --noinput
+	docker-compose run \
+		--rm \
+		--entrypoint /src/dashboard/src/manage.py \
+			archivematica-dashboard \
+				set_agent_code --agent-code=$(VERSION)
 	docker-compose run \
 		--rm \
 		--entrypoint /src/dashboard/src/manage.py \
