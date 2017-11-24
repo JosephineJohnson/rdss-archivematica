@@ -1,0 +1,108 @@
+#
+# Machine deployment configuration
+#
+
+# Amazon Web Services ##########################################################
+
+# Whether or not to use MFA authentication
+MFA_AUTH_ENABLED=${MFA_AUTH_ENABLED:-true}
+
+# The ARN for the MFA device you wish to use to authenticate.
+MFA_DEVICE_ID=${MFA_DEVICE_ID:-"<your-mfa-device-arn>"}
+
+# The region to deploy to. Defaults to eu-west-2 (London).
+AWS_REGION=${AWS_REGION:-'eu-west-2'}
+
+# The ID of the existing Virtual Private Cloud to provision EC2 instances into.
+VPC_ID=${VPC_ID:-"<your-vpc-id>"}
+
+# The ID of the existing subnet to deploy EC2 instance into. If not specified
+# then the first subnet of the VPC will be used.
+SUBNET_ID=${SUBNET_ID}
+
+# Deployment ###################################################################
+
+# The SSH key to use to secure the deployed instances.
+SSH_KEY_PATH=${SSH_KEY_PATH:-~/.ssh/id_rsa_MyAwsKey}
+
+# The project id this deployment is for. Can be anything, but should be
+# numerical to match what Jisc use.
+PROJECT_ID=${PROJECT_ID:-"0000"}
+
+# Environment this deployment is for. Should be one of 'dev', 'uat', or 'prod'.
+ENVIRONMENT=${ENVIRONMENT:-"dev"}
+
+# The public domain name to use for for deployed services. This is managed by a
+# public Route53 hosted zone, so must be under your control. It is also used to
+# generate SSL certificates. Defaults to 'example.ac.uk'.
+PUBLIC_DOMAIN_NAME=${PUBLIC_DOMAIN_NAME:-"example.ac.uk"}
+
+# Private Route53 hosted zone. This is used to address services internally within the VPC.
+PRIVATE_HOSTED_ZONE=${PRIVATE_HOSTED_ZONE:-"${PROJECT_ID}-${ENVIRONMENT}"}
+
+# Public Route53 hosted zone. This is used to address services externally from the internet.
+# The top-level domain must exist and reference Route53 for its nameservers.
+PUBLIC_HOSTED_ZONE=${PUBLIC_HOSTED_ZONE:-"${PRIVATE_HOSTED_ZONE}.${PUBLIC_DOMAIN_NAME}"}
+
+# The version or branch of RDSSARK to deploy. Default is 'master'.
+RDSSARK_VERSION=${RDSSARK_VERSION:-"master"}
+
+# Arkivum appliance ############################################################
+
+# Whether or not to include an Arkivum appliance in this deployment. If set to a
+# non-empty value (e.g. `true`) then an appliance will be included, otherwise
+# there will be no appliance. Defaults to "", so no appliance is included.
+ARKIVUM_ENABLED=${ARKIVUM_ENABLED:-""}
+
+# Name of the EC2 instance to run this deployment's Arkivum appliance. This
+# will be created automatically if it does not already exist.
+ARKIVUM_INSTANCE=${ARKIVUM_INSTANCE:-"${PROJECT_ID}-${ENVIRONMENT}-arkivum"}
+
+# The EC2 instance type to use for this deployment's Arkivum appliance.
+ARKIVUM_INSTANCE_TYPE=${ARKIVUM_INSTANCE_TYPE:-"t2.nano"}
+
+# Docker host ##################################################################
+
+# Name of the EC2 instance to run this deployment's Docker host. This will be
+# created automatically if it does not already exist.
+DOCKERHOST_INSTANCE=${DOCKERHOST_INSTANCE:-"${PROJECT_ID}-${ENVIRONMENT}-dockerhost"}
+
+# The EC2 instance type to use for this deployment's Docker host. Must be at
+# least 't2.medium' otherwise build will fail.
+DOCKERHOST_INSTANCE_TYPE=${DOCKERHOST_INSTANCE_TYPE:-"t2.medium"}
+
+# The size of the root partition for this deployment's Docker host, in
+# gigabytes. Default is 16, which is the minimum viable for running our Docker
+# containers.
+DOCKERHOST_ROOT_SIZE=${DOCKERHOST_ROOT_SIZE:-16}
+
+# NextCloud ####################################################################
+
+# Parameters for the S3 bucket to mount as part of the NextCloud service
+S3_BUCKET_PARAMS=${S3_BUCKET_PARAMS:-""}
+
+# NFS server ###################################################################
+
+# Name of the EC2 instance that is running this deployment's NFS server. This
+# will be created automatically if it does not already exist.
+NFS_INSTANCE=${NFS_INSTANCE:-"${PROJECT_ID}-${ENVIRONMENT}-nfs"}
+
+# The EC2 instance type to use for this deployment's NFS server.
+NFS_INSTANCE_TYPE=${NFS_INSTANCE_TYPE:-"t2.nano"}
+
+# Size of EBS volume to provision for use by the NFS server for storage, in GB.
+NFS_STORAGE_SIZE=${NFS_STORAGE_SIZE:-10}
+
+# Volume type of the EBS volume to provision for use by the NFS server for
+# storage. Defaults to 'gp2', but should be changed to 'sc1' or 'st1' if the
+# size is increased to 500GB or more.
+NFS_STORAGE_VOLUME_TYPE=${NFS_STORAGE_VOLUME_TYPE:-"gp2"}
+
+# Application Security #########################################################
+
+# The organisation that 'owns' this domain. Used for SSL certificate information
+# but also Shibboleth configuration. Default is "Example University".
+DOMAIN_ORGANISATION=${DOMAIN_ORGANISATION:-"Example University"}
+
+# Which Shibboleth config to use, if any. Default is "archivematica".
+SHIBBOLETH_CONFIG=${SHIBBOLETH_CONFIG:-"archivematica"}

@@ -1,0 +1,22 @@
+#!/bin/bash
+
+#Install xfsprogs
+yum -y install xfsprogs
+
+# create fs if needed
+if file -s "/dev/xvdf" | grep "/dev/xvdf: data"; then
+echo "creating fs for nfs data volume"
+mkfs.xfs "/dev/xvdf"
+fi
+
+# mount it
+mkdir "/mnt/nfs"
+echo "/dev/xvdf       /mnt/nfs   xfs    defaults,nofail  0 2" >> /etc/fstab
+echo "mounting nfs data disk"
+mount -a
+
+# start NFS service
+echo "/mnt/nfs *(rw,sync,no_root_squash,no_subtree_check)" > /etc/exports
+chmod 777 /mnt/nfs
+
+service nfs restart
