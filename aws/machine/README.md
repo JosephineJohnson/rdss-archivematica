@@ -1,22 +1,14 @@
-# Deployment with Docker Machine
-
-- [Introduction](#introduction)
-- [Requirements](#requirements)
-- [AWS credentials](#aws-credentials)
-- [Machine provisioning](#machine-provisioning)
-- [Transfer the source codes](#transfer-the-source-code)
-- [Start Archivematica](#start-archivematica)
-- [Connect](#connect)
+# Deployment with Docker Machine into Amazon Web Services
 
 ## Introduction
 
-This document describes the process needed to install RDSS Archivematica in a single EC2 instance using Docker Machine.
+This document describes the process needed to install the RDSSARK solution into EC2 instances using Docker Machine and the AWS CLI.
 
-It is a replica of the development environment. This is not intended to use in production.
+It is a replica of the development environment. This is not intended for use in production but is suitable for QA use.
 
 ## Requirements
 
-You need:
+The following software is required to be installed to run a deployment:
 
 - [Docker Engine](https://docs.docker.com/engine/)
 - [Docker Compose](https://docs.docker.com/compose/overview/)
@@ -25,6 +17,15 @@ You need:
 [Docker for Windows](https://docs.docker.com/docker-for-windows/) or [Docker for Mac](https://docs.docker.com/docker-for-mac/) include all the tools needed.
 
 If you are a Linux user you need to install them [separately](https://docs.docker.com/manuals/).
+
+However, before attempting any deployment you will need the following:
+
+1. Acess to an AWS account (root or IAM credentials are fine)
+1. A pre-existing VPC configured in which to deploy to
+1. A pre-existing subnet within the VPC in which to deploy to
+1. Ideally, a pre-existing registered domain that you have DNS management access for.
+
+If you do not have access to a registered domain then you can use "poor man's" DNS by editing and maintaining your `/etc/hosts` manually.
 
 ## AWS credentials
 
@@ -38,105 +39,93 @@ Also, create a new SSH key pair:
 
     $ ssh-keygen -f ~/.ssh/id_rsa_MyAwsKey -t rsa -b 4096 -N ''
 
-## Machine provisioning
+## Provisioning and Deployment
 
-Run the following command to create the new machine. This may take a few minutes! Feel free to choose any of the [regions available](http://docs.aws.amazon.com/general/latest/gr/rande.html#ec2_region).
+The [deploy](deploy.sh) script will automatically provision EC2 instances for an Arkivum appliance, a NFS server and a Docker host. The Docker host is provisioned using `docker-machine`, other instances and resources are provisioned using the AWS CLI tool. As well as provisioning, the deploy script also builds Docker images and mounts volumes to allow services to integrate and interact. The Docker deployment uses Docker Compose services (defined [here](../../compose)) for instantiation.
 
-    $ docker-machine create \
-        --driver amazonec2 \
-        --amazonec2-region us-east-1 \
-        --amazonec2-instance-type t2.medium \
-        --amazonec2-ssh-keypath ~/.ssh/id_rsa_MyAwsKey \
-            aws-rdss-archivematica
+Before use, you will need to fill out the [configuration template](etc/deployment.conf.template) and save it to `etc/deployment.conf`. This template file requires that you fill in parameters relating to a) your AWS account, and b) the environment you wish to deploy.
 
-Set up the client to connect to the machine we've just created:
+### AWS Account Parameters
 
-    $ eval $(docker-machine env aws-rdss-archivematica)
+1. `MFA_AUTH_ENABLED`: Whether or not to require an MFA device for authentication
+1. `MFA_DEVICE_ID`: The ARN of your MFA device, as shown in the IAM console
+1. `VPC_ID`: The ID of the Virtual Private Cloud to deploy instances into
+1. `SUBNET_ID`: The ID of the subnet to deploy instances into
+1. `PUBLIC_DOMAIN_NAME`: The name of the public DNS domain to use for the deployment. This domain must be under your control, as you will need to update the nameserver information to point to the Route53 nameservers Amazon provides.
 
-If this is done properly you should have some extra environment strings defined, e.g.:
+### Deployment Parameters
 
-    $ env | grep DOCKER
-    DOCKER_CERT_PATH=/Users/jesus/.docker/machine/machines/aws-rdss-archivematica
-    DOCKER_HOST=tcp://52.204.93.128:2376
-    DOCKER_MACHINE_NAME=machine-rdss-archivematica
-    DOCKER_TLS_VERIFY=1
+1. `SSH_KEY_PATH`: The path of the RSA key to use to secure SSH access to deployed instances
+1. `PROJECT_ID`: The id for this deployment, for example `235`
+1. `ENVIRONMENT`: The environment for the deployment - one of `dev`, `uat` or `prod`
+1. `RDSSARK_VERSION`: The branch of the `rdss-archivematica` project to deploy. This may be a version tag, e.g. `v0.2.0`. Default is `master`.
 
-Test that you can run a long-running process:
+### Arkivum Appliance Parameters
 
-    $ docker run redis:alpine
-    b076fb468fdf28771fc8cd25e1ad0a3d18eaba6c007a855c9dfdfc5c9a497a74
+1. `ARKIVUM_ENABLED`: Whether or not to include an Arkivum appliance in the deployment. A non-empty value will cause the appliance to be deployed, empty value will be evaluated as false. Defaults to `""`, i.e. disabled.
+1. `ARKIVUM_INSTANCE_TYPE`: The EC2 instance type to use for the Arkivum appliance. Defaults to `t2.nano` so most deployments will want to change this.
 
-Press `CTRL+C` to exit. Congratulations!
+### Docker Host Parameters
 
-## Transfer the source code
+1. `DOCKERHOST_INSTANCE_TYPE`: The EC2 instance type to use for the Docker host. Defaults to `t2.medium`, which is the minimum required for all containers to build and run.
+1. `DOCKERHOST_ROOT_SIZE`: The size of the root partition for the Docker host, in gigabytes. Defaults to 16, which is the minimum viable for running all containers.
 
-**This step is necessary because we're deploying the development environment which expects the sources to be locally present!**
+### NextCloud Parameters
 
-Go to the root folder of this repository to clone the repositories:
+1. `S3_BUCKET_PARAMS`: The parameters of the S3 bucket that you wish to mount into NextCloud
 
-    $ cd ../../
-    $ make clone
+### NFS Server Parameters
 
-Create remote folder to transfer the sources:
+1. `NFS_INSTANCE_TYPE`: The EC2 instance type to use for the NFS server. Defaults to `t2.nano` so most deployments will want to change this.
+1. `NFS_STORAGE_SIZE`: The size of the EBS volume to provision for use by the NFS server for storage, in GB. Default is `10`, so most deployments will want to change this.
+1. `NFS_STORAGE_VOLUME_TYPE`: Volume type of the EBS volume for use by the NFS server for storage. Defaults to 'st1'.
 
-    $ docker-machine ssh aws-rdss-archivematica -- sudo mkdir -p $(pwd)
-    $ docker-machine ssh aws-rdss-archivematica -- sudo chown -R ubuntu:ubuntu $(pwd)
+### Application Security Parameters
 
-Look up the IP address of the remote machine, you'r going to need it later.
+1. `DOMAIN_ORGANISATION`: The name of the organisation that this deployment is for. This is used for SSL certificates and also Shibboleth configuration, if enabled. Defaults to "Example University".
+1. `SHIBBOLETH_CONFIG`: Which Shibboleth config to use, if any. Default is `archivematica`. Set to `none` to disable Shibboleth.
 
-    $ docker-machine ip aws-rdss-archivematica
-    52.204.93.128
+Additional parameters are also available, but the defaults for these are generally okay. See the comments in the [configuration template](etc/deployment.conf.template) for details.
 
-Transfer all the sources:
+Once you have created your config file, you can run the script:
 
-    $ rsync \
-        --cvs-exclude \
-        --exclude "archivematica-sampledata" \
-        -e "ssh -i ~/.ssh/id_rsa_MyAwsKey" \
-        -azP \
-            ./ \
-            ubuntu@52.204.93.128:$(pwd)/
+    ./deploy.sh
 
-## Start Archivematica
+This script will take care of any necessary authentication with AWS, and will challenge you for an MFA code if required.
 
-Change your current directory to `compose/dev` and start running the containers.
+If you wish to override some or all configuration options using environment variables then you can, for example:
 
-    $ cd compose/dev
-    $ docker-compose build
-    $ docker-compose up -d
-    $ make bootstrap
+    PUBLIC_DOMAIN_NAME=mydomain.net PROJECT_ID=1234 ./deploy.sh
 
-Make sure that all the services are running:
+Again, see the [configuration template](etc/deployment.conf.template) for the full list of settings that can be overriden.
 
-```
-$ docker-compose ps
-               Name                  State                       Ports
--------------------------------------------------------------------------------------------
-dev_archivematica-dashboard_1        Up      8000/tcp
-dev_archivematica-mcp-client_1       Up
-dev_archivematica-mcp-server_1       Up
-dev_archivematica-storage-service_1  Up      8000/tcp
-dev_clamavd_1                        Up      3310/tcp
-dev_elasticsearch_1                  Up      9200/tcp, 9300/tcp
-dev_fits_1                           Up      2113/tcp
-dev_gearmand_1                       Up      4730/tcp
-dev_mysql_1                          Up      3306/tcp
-dev_nginx_1                          Up      0.0.0.0:32769->80/tcp, 0.0.0.0:32768->8000/tcp
-dev_redis_1                          Up      6379/tcp
-```
+## Connecting to Deployed Services
 
-## Connect
+The deployment script will output the public IP addresses for each of the Arkivum appliance, NFS server and Docker host instances that have been deployed for the configured project id and environment.
 
-The Nginx service is the one that gives you access to the Dashboard and Storage Service. In the table above you can see that their ports have been made available: `32769/tcp` for the Dashboard, `32768/tcp` for the Storage Service. The ports are assigned randomly.
+These IP addresses are automatically associated with DNS hosted zones in AWS Route53. The `deploy` script will output the host names for each instance as well as the URLs that the deployed services are available on.
 
-AWS won't let you access to those TCP ports unless you edit the security group. Once the security group is updated (named "Docker Machine"), you should be able to access from your browser to: http://52.204.93.128:32769 (Dashboard) and http://52.204.93.128:32768 (Storage Service).
+## Tearing Down
 
-You can do that easily from the AWS Console. Alternatively you can forward the ports locally using SSH tunneling:
+To tear down resources, use the [teardown.sh](teardown.sh) script:
 
-    $ ssh \
-        -i ~/.ssh/id_rsa_MyAwsKey -Nv \
-        -L 9000:127.0.0.1:32769 \
-        -L 9001:127.0.0.1:32768
-            \ ubuntu@$(docker-machine ip aws-rdss-archivematica)
+    ./teardown.sh
 
-With this you should be able to access from your browser to: http://127.0.0.1:9000 (Dashboard) and http://127.0.0.1:9001 (Storage Service).
+Like the deploy script, this will also read the config defined in `etc/deployment.conf`. You can also override any of the settings defined in this config:
+
+    PUBLIC_DOMAIN_NAME=mydomain.net PROJECT_ID=1234 ./teardown.sh
+
+By default the teardown script **will not** remove EBS volumes that are not set to be deleted when an instance terminates. In particular, the data volume used by the NFS server will not be deleted. To override this, use the `DESTROY_VOLUMES` environment variable:
+
+    PUBLIC_DOMAIN_NAME=mydomain.net DESTROY_VOLUMES=yes PROJECT_ID=1234 ./teardown.sh
+
+**WARNING: ALL DATA FOR THE GIVEN `PROJECT_ID` AND `ENVIRONMENT` WILL BE DESTROYED BY THIS COMMAND!!**
+
+# Known Issues / TODO
+
+1. Arkivum appliance instance is currently not installed properly, so won't work
+1. SSL certificates are currently self-signed so will generate warnings when HTTPS resources are accessed
+1. Instances and containers do not use private zone for DNS (currently use AWS default instead, so full host name need to be given to resolve)
+1. Should probably aim to use Ansible for some/most/all of this deployment process
+1. Not tested on anything other than Ubuntu 14.04
+1. It should be possible to deploy without assuming the use of a registered public domain name
