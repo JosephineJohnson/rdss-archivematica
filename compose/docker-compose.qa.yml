@@ -6,13 +6,15 @@ volumes:
   # Internal Named Volumes
   # These are not accessible outside of the docker host and are maintained by
   # Docker.
-  elasticsearch_data:
 
   # External Named Volumes
   # These are intended to be accessible beyond the docker host (e.g. via NFS).
   # They use bind mounts to mount a specific "local" directory on the docker
   # host - the expectation being that these directories are actually mounted
   # filesystems from elsewhere.
+  archivematica_autotools_data:
+    external:
+      name: "rdss_am-autotools-data"
   archivematica_pipeline_data:
     external:
       name: "rdss_am-pipeline-data"
@@ -22,6 +24,9 @@ volumes:
   archivematica_storage_service_staging_data:
     external:
       name: "rdss_am-ss-staging-data"
+  elasticsearch_data:
+    external:
+      name: "rdss_elasticsearch-data"
   minio_export_data:
     external:
       name: "rdss_minio_export_data"
@@ -147,6 +152,7 @@ services:
       AM_TOOLS_TRANSFER_SS_USER: "test"
     volumes:
       - "archivematica_pipeline_data:/var/archivematica/sharedDirectory"
+      - "archivematica_autotools_data:/var/archivematica/automation-tools"
     links:
       - "archivematica-dashboard"
       - "archivematica-storage-service"
