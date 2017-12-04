@@ -9,8 +9,10 @@ COMPOSE_DIRS ?= $(ENV)
 BASE_DIR ?= ${CURDIR}
 
 # Paths for Docker named volumes
+AM_AUTOTOOLS_DATA ?= /tmp/rdss/am-autotools-data
 AM_PIPELINE_DATA ?= /tmp/rdss/am-pipeline-data
 ARK_STORAGE_DATA ?= /tmp/rdss/arkivum-storage
+ELASTICASEARCH_DATA ?= /tmp/rdss/elasticsearch-data
 JISC_TEST_DATA ?= /tmp/rdss/jisc-test-data
 MINIO_EXPORT_DATA ?= /tmp/rdss/minio-export-data
 MYSQL_DATA ?= /tmp/rdss/mysql-data
@@ -68,6 +70,9 @@ config:
 
 create-volumes:
 	# Create Archivematica named volumes
+	@mkdir -p ${AM_AUTOTOOLS_DATA}
+	@docker volume create --opt type=none --opt o=bind \
+                --opt device=$(AM_AUTOTOOLS_DATA) rdss_am-autotools-data
 	@mkdir -p ${AM_PIPELINE_DATA}
 	@docker volume create --opt type=none --opt o=bind \
 		--opt device=$(AM_PIPELINE_DATA) rdss_am-pipeline-data
@@ -84,6 +89,10 @@ create-volumes:
 	@mkdir -p ${ARK_STORAGE_DATA}/aipingest
 	@docker volume create --opt type=none --opt o=bind \
 		--opt device=$(ARK_STORAGE_DATA) rdss_arkivum-storage
+	# Create ElasticSearch named volume
+	@mkdir -p ${ELASTICSEARCH_DATA}
+	@docker volume create --opt type=none --opt o=bind \
+                --opt device=$(ELASTICSEARCH_DATA) rdss_elasticsearch-data
 	# Create Jisc named volumes
 	@mkdir -p ${JISC_TEST_DATA}
 	@docker volume create --opt type=none --opt o=bind \
