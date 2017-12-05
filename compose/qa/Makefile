@@ -121,4 +121,4 @@ watch-am:
 watch-ss:
 	docker-compose logs -f archivematica-storage-service
 
-.PHONY: default destroy bootstrap build bootstrap-dashboard bootstrap-storage-service config create-secrets list restart-mcp-services
+.PHONY: default destroy bootstrap build bootstrap-dashboard bootstrap-dashboard-frontend bootstrap-storage-service config create-secrets list restart-mcp-services
