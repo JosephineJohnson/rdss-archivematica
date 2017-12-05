@@ -38,6 +38,9 @@ bootstrap-storage-service:
 					--email="test@test.com" \
 					--api-key="test" \
 					--superuser
+	# Create RDSS storage locations
+	docker-compose exec archivematica-storage-service \
+		python /rdss/create-storage-locations.py
 
 bootstrap-dashboard:
 	# Wait for services to start properly to avoid race/timing problems
