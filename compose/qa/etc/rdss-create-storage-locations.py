@@ -17,7 +17,28 @@ Pipeline and Space, since this is what is expected in the RDSS deployment.
 Having identified the URIs for the pipeline and space, it then uses the API to
 create the required locations."""
 
+import argparse
 import requests
+
+# Process arguments
+
+parser = argparse.ArgumentParser(
+                    description='Creates required Storage Service locations.')
+parser.add_argument('--base-url', required=True,
+                    help='Base URL of Storage Service API to use.')
+parser.add_argument('--api-user', required=True,
+                    help='Username to use when authenticating with the API.')
+parser.add_argument('--api-pass', required=True,
+                    help='Password to use when authenticating with the API.')
+args = parser.parse_args()
+
+# Strip trailing '/' off base_url, if any
+args.base_url = args.base_url.rstrip('/')
+
+# Output parameters
+print "Using base URL '%s'" % args.base_url
+print "Using API user '%s'" % args.api_user
+print "Using API pass '%s'" % args.api_pass
 
 # Iterate through all the existing locations and determine if the "automated"
 # and "interactive" Transfer Source locations already exist
@@ -26,8 +47,12 @@ automated_exists = False
 interactive_exists = False
 
 r = requests.get(
-    'http://localhost:8000/api/v2/location/',
-    headers={'Authorization': 'ApiKey test:test'}
+    '%s/api/v2/location/' % args.base_url,
+    headers={
+        'Authorization': 'ApiKey %s:%s' % (
+            args.api_user,
+            args.api_pass)
+    }
 )
 
 for loc in r.json()['objects']:
@@ -39,18 +64,22 @@ for loc in r.json()['objects']:
 if not automated_exists or not interactive_exists:
     # Get the URI of the pipeline. In RDSS we only have one.
     pipeline_uri = requests.get(
-            'http://localhost:8000/api/v2/pipeline/',
+            '%s/api/v2/pipeline/' % args.base_url,
             headers={
-                'Authorization': 'ApiKey test:test',
+                'Authorization': 'ApiKey %s:%s' % (
+                    args.api_user,
+                    args.api_pass),
                 'Content-Type': 'application/json'
             }
         ).json()['objects'][0]['resource_uri']
 
     # Get the URI of the space. In RDSS we only have one.
     space_uri = requests.get(
-            'http://localhost:8000/api/v2/space/',
+            '%s/api/v2/space/' % args.base_uri,
             headers={
-                'Authorization': 'ApiKey test:test',
+                'Authorization': 'ApiKey %s:%s' % (
+                    args.api_user,
+                    args.api_pass),
                 'Content-Type': 'application/json'
             }
         ).json()['objects'][0]['resource_uri']
@@ -58,8 +87,11 @@ if not automated_exists or not interactive_exists:
     if not automated_exists:
         # Location for automated workflow doesn't exist, create it
         r = requests.post(
-            'http://localhost:8000/api/v2/location/',
-            headers={'Authorization': 'ApiKey test:test'},
+            '%s/api/v2/location/' % args.base_url,
+            headers={
+                'Authorization': 'ApiKey %s:%s' % (
+                    args.api_user,
+                    args.api_pass)},
             json={
                 'pipeline': [pipeline_uri],
                 'purpose': 'TS',
@@ -79,8 +111,11 @@ if not automated_exists or not interactive_exists:
     if not interactive_exists:
         # Location for interactive workflow doesn't exist, create it
         r = requests.post(
-            'http://localhost:8000/api/v2/location/',
-            headers={'Authorization': 'ApiKey test:test'},
+            '%s/api/v2/location/' % args.base_url,
+            headers={
+                'Authorization': 'ApiKey %s:%s' % (
+                    args.api_user,
+                    args.api_pass)},
             json={
                 'pipeline': [pipeline_uri],
                 'purpose': 'TS',
