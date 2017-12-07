@@ -45,7 +45,10 @@ bootstrap-storage-service:
 					--superuser
 	# Create RDSS storage locations
 	docker-compose exec archivematica-storage-service \
-		python /rdss/create-storage-locations.py
+		python /rdss/create-storage-locations.py \
+			--base-url http://localhost:8000 \
+			--api-user test \
+			--api-pass test
 
 bootstrap-dashboard:
 	# Wait for MySQL to be ready
