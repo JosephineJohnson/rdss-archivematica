@@ -48,7 +48,7 @@ bootstrap-storage-service:
 		python /rdss/create-storage-locations.py \
 			--base-url http://localhost:8000 \
 			--api-user test \
-			--api-pass test
+			--api-key test
 
 bootstrap-dashboard:
 	# Wait for MySQL to be ready
