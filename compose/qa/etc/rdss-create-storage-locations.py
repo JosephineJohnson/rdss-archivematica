@@ -1,4 +1,4 @@
-#!/bin/env python
+#!/usr/bin/env python
 
 """This script aims to create two Transfer Storage locations in the
 Archivematica storage service if they don't already exist. These relate to the
@@ -15,9 +15,28 @@ added to using the Storage Service API. It assumes that there will only be one
 Pipeline and Space, since this is what is expected in the RDSS deployment.
 
 Having identified the URIs for the pipeline and space, it then uses the API to
-create the required locations."""
+create the required locations.
+
+It requires the non-standard 'requests' module to be installed:
+
+`pip install requests`
+
+"""
+
 
 import argparse
+import sys
+
+# Check we have the required 'requests' module installed
+import pkg_resources
+try:
+    pkg_resources.get_distribution('requests')
+except pkg_resources.DistributionNotFound:
+    print "Required module 'requests' not installed, aborting."
+    sys.exit(1)
+
+# We have the required modules, okay to continue
+
 import requests
 
 # Process arguments
@@ -28,8 +47,8 @@ parser.add_argument('--base-url', required=True,
                     help='Base URL of Storage Service API to use.')
 parser.add_argument('--api-user', required=True,
                     help='Username to use when authenticating with the API.')
-parser.add_argument('--api-pass', required=True,
-                    help='Password to use when authenticating with the API.')
+parser.add_argument('--api-key', required=True,
+                    help='Key to use when authenticating with the API.')
 args = parser.parse_args()
 
 # Strip trailing '/' off base_url, if any
@@ -38,7 +57,7 @@ args.base_url = args.base_url.rstrip('/')
 # Output parameters
 print "Using base URL '%s'" % args.base_url
 print "Using API user '%s'" % args.api_user
-print "Using API pass '%s'" % args.api_pass
+print "Using API key '%s'" % args.api_key
 
 # Iterate through all the existing locations and determine if the "automated"
 # and "interactive" Transfer Source locations already exist
@@ -51,7 +70,7 @@ r = requests.get(
     headers={
         'Authorization': 'ApiKey %s:%s' % (
             args.api_user,
-            args.api_pass)
+            args.api_key)
     }
 )
 
@@ -68,7 +87,7 @@ if not automated_exists or not interactive_exists:
             headers={
                 'Authorization': 'ApiKey %s:%s' % (
                     args.api_user,
-                    args.api_pass),
+                    args.api_key),
                 'Content-Type': 'application/json'
             }
         ).json()['objects'][0]['resource_uri']
@@ -79,7 +98,7 @@ if not automated_exists or not interactive_exists:
             headers={
                 'Authorization': 'ApiKey %s:%s' % (
                     args.api_user,
-                    args.api_pass),
+                    args.api_key),
                 'Content-Type': 'application/json'
             }
         ).json()['objects'][0]['resource_uri']
@@ -91,7 +110,7 @@ if not automated_exists or not interactive_exists:
             headers={
                 'Authorization': 'ApiKey %s:%s' % (
                     args.api_user,
-                    args.api_pass)},
+                    args.api_key)},
             json={
                 'pipeline': [pipeline_uri],
                 'purpose': 'TS',
@@ -115,7 +134,7 @@ if not automated_exists or not interactive_exists:
             headers={
                 'Authorization': 'ApiKey %s:%s' % (
                     args.api_user,
-                    args.api_pass)},
+                    args.api_key)},
             json={
                 'pipeline': [pipeline_uri],
                 'purpose': 'TS',
