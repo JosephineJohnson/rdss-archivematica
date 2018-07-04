@@ -134,6 +134,13 @@ RDSS_ADAPTER_AWS_ACCESS_KEY=${RDSS_ADAPTER_AWS_ACCESS_KEY:-"${AWS_ACCESS_KEY_ID}
 # the currently defined AWS_SECRET_ACCESS_KEY value.
 RDSS_ADAPTER_AWS_SECRET_KEY=${RDSS_ADAPTER_AWS_SECRET_KEY:-"${AWS_SECRET_ACCESS_KEY}"}
 
+# Whether or not to attempt to create the AWS resources required by the Channel
+# Adapter, such as DynamoDB tables and Kinesis streams. If MOCK_AWS is true then
+# the created resources will be created in the mock services, otherwise real AWS
+# services will be used. Default is 'false', which means that the resources must
+# be created by some other means.
+RDSS_ADAPTER_CREATE_AWS_RESOURCES=${RDSS_ADAPTER_CREATE_AWS_RESOURCES:-'false'}
+
 # The IAM role that the channel adapter should use when connecting to Kinesis
 # streams.
 RDSS_ADAPTER_KINESIS_ROLE="${RDSS_ADAPTER_KINESIS_ROLE}"

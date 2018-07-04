@@ -49,6 +49,176 @@ aws_auth_mfa()
     log_info "Authenticated with AWS"
 }
 
+#
+# Creates the given DynamoDB table with the given key(s), attributes and
+# throughput parameters.
+# Arguments:
+#  * table_name    The name of the table to create
+#  * key_schema    The schema for the key(s) of the table, in AWS short format
+#  * attr_defs     The attribute definitions for the table, in AWS short format
+#  * throughput    The provisioning throughput params for the table, in AWS
+#                  short format
+#
+# Example usage:
+#
+# aws_dynamodb_create_table "People" \
+#     "AttributeName=Email,KeyType=HASH" \
+#     "AttributeName=Email,AttributeType=S AttributeName=Name,AttributeType=S" \
+#     "ReadCapacityUnits=10,WriteCapacityUnits=10"
+#
+aws_dynamodb_create_table()
+{
+    local -r table_name="$1"
+    local -r key_schema="$2"
+    local -r attr_defs="$3"
+    local -r throughput="$4"
+    # Establish session
+    session_get
+    # Check if the table already exists
+    if ! aws_dynamodb_table_exists "${table_name}" ; then
+        # Given table doesn't exist, create it
+        log_info "Creating DynamoDB table '${table_name}' ..."
+        aws dynamodb create-table \
+            --table-name "${table_name}" \
+            --attribute-definitions "${attr_defs}" \
+            --key-schema "${key_schema}" \
+            --provisioned-throughput "${throughput}"
+    fi
+    aws_dynamodb_wait_until_table_status "${table_name}" "ACTIVE"
+    log_info "DynamoDB table '${table_name}' is now active."
+    # Tag the table
+    aws_dynamodb_tag_table "${table_name}" "${PROJECT_ID}" "${ENVIRONMENT}"
+}
+
+# Deletes the DynamoDB table with the given name.
+aws_dynamodb_delete_table()
+{
+    local -r table_name="$1"
+    # Establish session
+    session_get
+    # Check the table's current status
+    local table_status="$(aws_dynamodb_table_status "${table_name}")"
+    case $table_status in
+        ACTIVE)
+            # Okay to delete
+            log_info "Deleting DynamoDB table '${table_name}' ..."
+            aws dynamodb delete-table --table-name "${table_name}"
+            aws_dynamodb_wait_while_table_status "${table_name}" "DELETING"
+            log_info "Deleted DynamoDB table '${table_name}'"
+            ;;
+        CREATING)
+            # Can't delete a table that's being created
+            ;;
+        DELETING)
+            # Already deleting, nothing to do
+            ;;
+        NOTFOUND)
+            # Doesn't exist, nothing to do
+            ;;
+        UPDATING)
+            # Can't delete a table that's being updated
+            ;;
+    esac
+}
+
+# Checks if a DynamoDB table with the given name exists or not.
+# Returns 0 if a table exists, 1 if it doesn't.
+aws_dynamodb_table_exists()
+{
+    local -r table_name="$1"
+    # Establish session
+    session_get
+    # Check if the given table exists
+    aws dynamodb list-tables --no-paginate --query TableNames --output text | \
+        grep "${table_name}" >/dev/null
+    return $?
+}
+
+# Gets the id (ARN) of the table with the given name, if it exists. If the table
+# doesn't exist then "NOTFOUND" is returned.
+aws_dynamodb_table_id()
+{
+    local -r table_name="$1"
+    if aws_dynamodb_table_exists "${table_name}" ; then
+        aws dynamodb describe-table \
+            --table-name "${table_name}" \
+            --query "Table.TableArn" \
+            --output text 2>/dev/null
+    else
+        echo "NOTFOUND"
+    fi
+}
+
+# Checks the status of the DynamoDB table with the given name.
+# Returns one of "ACTIVE", "CREATING", "DELETING", "UPDATING" or "NOTFOUND".
+aws_dynamodb_table_status()
+{
+    local -r table_name="$1"
+    # Establish session
+    session_get
+    # Get status of the given table
+    if aws_dynamodb_table_exists "${table_name}" ; then
+        aws dynamodb describe-table \
+            --table-name "${table_name}" \
+            --query "Table.TableStatus" \
+            --output text 2>/dev/null
+    else
+        echo "NOTFOUND"
+    fi
+}
+
+# Tags the given DynamoDB table with the given project id and environment
+# values.
+aws_dynamodb_tag_table()
+{
+    local -r table_name="$1"
+    local -r tag_proj="$2"
+    local -r tag_env="$3"
+    # Establish session
+    session_get
+    # Get the resource id for the given table
+    local -r table_id="$(aws_dynamodb_table_id "${table_name}")"
+    if [ "${table_id}" != "NOTFOUND" ] ; then
+        # Tag the resource with the given tags
+        log_debug "Tagging '${table_name}': ProjectId='${tag_proj}', Environment='${tag_env}'..."
+        aws dynamodb tag-resource \
+            --resource-arn "${table_id}" \
+            --tags \
+                "Key=ProjectId,Value=${tag_proj}" \
+                "Key=Environment,Value=${tag_env}"
+        log_info "Tagged '${table_name}': ProjectId='${tag_proj}', Environment='${tag_env}'."
+    fi
+}
+
+# Waits until the table with the given name has the given status.
+aws_dynamodb_wait_until_table_status()
+{
+    local -r table_name="$1"
+    local -r target_status="$2"
+    # Establish session
+    session_get
+    # Wait for the target status
+    while [ "$(aws_dynamodb_table_status "${table_name}")" != "${target_status}" ] ; do
+        log_info "Waiting until DynamoDB table '${table_name}' is '${target_status}' ..."
+        sleep 2
+    done
+}
+
+# Waits while the table with the given name has the given status.
+aws_dynamodb_wait_while_table_status()
+{
+    local -r table_name="$1"
+    local -r target_status="$2"
+    # Establish session
+    session_get
+    # Wait while the target status holds true
+    while [ "$(aws_dynamodb_table_status "${table_name}")" == "${target_status}" ] ; do
+        log_info "Waiting while DynamoDB table '${table_name}' is '${target_status}' ..."
+        sleep 2
+    done
+
+}
+
 aws_ec2_create_instance()
 {
     local -r name="$1"
@@ -448,6 +618,132 @@ aws_keypair_remove()
         aws ec2 delete-key-pair --key-name "${keypair_name}"
         log_info "Deleted keypair '${keypair_name}'."
     fi
+}
+
+# Creates a new Kinesis stream with the given name and, optionally, the given
+# shard count. If no shard count is given then the default of 1 will be used.
+aws_kinesis_create_stream()
+{
+    local -r stream_name="$1"
+    local -r shard_count="${2:-1}"
+    # Establish session
+    session_get
+    if ! aws_kinesis_stream_exists "${stream_name}" ; then
+        # Given stream doesn't exist, create it
+        log_info "Creating Kinesis stream '${stream_name}' with ${shard_count} shards..."
+        aws kinesis create-stream \
+            --stream-name "${stream_name}" \
+            --shard-count "${shard_count}"
+    fi
+    aws_kinesis_wait_until_stream_status "${stream_name}" "ACTIVE"
+    log_info "Kinesis stream '${stream_name}' is now active."
+    # Tag the stream
+    aws_kinesis_tag_stream "${stream_name}" "${PROJECT_ID}" "${ENVIRONMENT}"
+}
+
+# Deletes the Kinesis stream with the given name.
+aws_kinesis_delete_stream()
+{
+    local -r stream_name="$1"
+    # Establish session
+    session_get
+    # Get the stream's current status
+    local stream_status="$(aws_kinesis_stream_status "${stream_name}")"
+    case $stream_status in
+        ACTIVE)
+            # Okay to delete
+            log_info "Deleting Kinesis stream '${stream_name}' ..."
+            aws kinesis delete-stream --stream-name "${stream_name}"
+            aws_kinesis_wait_while_stream_status "${stream_name}" "DELETING"
+            log_info "Deleted Kinesis stream '${stream_name}'."
+            ;;
+        CREATING)
+            # Can't delete a stream that's being updated
+            ;;
+        DELETING)
+            # Already deleting, nothing to do
+            ;;
+        NOTFOUND)
+            # Doesn't exist, nothing to do
+            ;;
+        UPDATING)
+            # Can't delete a stream that's being updated
+            ;;
+    esac
+}
+
+# Checks if a stream with the given name exists or not.
+# Returns 0 if a stream exists, 1 if it doesn't.
+aws_kinesis_stream_exists()
+{
+    local -r stream_name="$1"
+    # Establish session
+    session_get
+    # Check if the stream exists
+    aws kinesis list-streams --no-paginate --query StreamNames --output text | \
+        grep "${stream_name}" >/dev/null
+    return $?
+}
+
+# Checks the status of the stream with the given name.
+# Returns one of "ACTIVE", "CREATING", "DELETING", "UPDATING" or "NOTFOUND".
+aws_kinesis_stream_status()
+{
+    local -r stream_name="$1"
+    # Establish session
+    session_get
+    # Get the stream's status
+    if aws_kinesis_stream_exists "${stream_name}" ; then
+        aws kinesis describe-stream \
+            --stream-name "${stream_name}" \
+            --query "StreamDescription.StreamStatus" 2>/dev/null | \
+            tr -d '"'
+    else
+        echo "NOTFOUND"
+    fi
+}
+
+aws_kinesis_tag_stream()
+{
+    local -r stream_name="$1"
+    local -r tag_proj="$2"
+    local -r tag_env="$3"
+    # Establish session
+    session_get
+    # Tag the stream with the given tags
+    log_debug "Tagging '${stream_name}': ProjectId='${tag_proj}', Environment='${tag_env}'..."
+    aws kinesis add-tags-to-stream \
+        --stream-name "${stream_name}" \
+        --tags "ProjectId=${tag_proj},Environment=${tag_env}"
+    log_info "Tagged '${stream_name}': ProjectId='${tag_proj}', Environment='${tag_env}'."
+}
+
+# Waits until the stream with the given name has the given status.
+aws_kinesis_wait_until_stream_status()
+{
+    local -r stream_name="$1"
+    local -r target_status="$2"
+    # Establish session
+    session_get
+    # Wait for the given target status
+    while [ "$(aws_kinesis_stream_status "${stream_name}")" != "${target_status}" ] ; do
+        log_info "Waiting until Kinesis stream '${stream_name}' is '${target_status}' ..."
+        sleep 2
+    done
+}
+
+# Waits while the stream with the given name has the given status.
+aws_kinesis_wait_while_stream_status()
+{
+    local -r stream_name="$1"
+    local -r target_status="$2"
+    # Establish session
+    session_get
+    # Wait while the given status holds true
+    while [ "$(aws_kinesis_stream_status "${stream_name}")" == "${target_status}" ] ; do
+        log_info "Waiting while Kinesis stream '${stream_name}' is '${target_status}' ..."
+        sleep 2
+    done
 }
 
 # Adds the given host name and IP address to the DNS for the given zone.

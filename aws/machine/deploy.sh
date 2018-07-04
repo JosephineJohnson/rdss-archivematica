@@ -43,6 +43,30 @@ fi
 
 # Deployments ##################################################################
 
+create_channel_adapter_resources()
+{
+    # Establish session
+    session_get
+    # Create DynamoDB tables
+    aws_dynamodb_create_table "${RDSS_ADAPTER_TABLE_CHECKPOINTS}" \
+        "AttributeName=Shard,KeyType=HASH" \
+        "AttributeName=Shard,AttributeType=S" \
+        "ReadCapacityUnits=10,WriteCapacityUnits=10"
+    aws_dynamodb_create_table "${RDSS_ADAPTER_TABLE_CLIENTS}" \
+        "AttributeName=ID,KeyType=HASH" \
+        "AttributeName=ID,AttributeType=S" \
+        "ReadCapacityUnits=10,WriteCapacityUnits=10"
+    aws_dynamodb_create_table "${RDSS_ADAPTER_TABLE_METADATA}" \
+        "AttributeName=Key,KeyType=HASH" \
+        "AttributeName=Key,AttributeType=S" \
+        "ReadCapacityUnits=10,WriteCapacityUnits=10"
+    # Create Kinesis streams
+    aws_kinesis_create_stream "${RDSS_ADAPTER_QUEUE_ERROR}"
+    aws_kinesis_create_stream "${RDSS_ADAPTER_QUEUE_INPUT}"
+    aws_kinesis_create_stream "${RDSS_ADAPTER_QUEUE_INVALID}"
+    aws_kinesis_create_stream "${RDSS_ADAPTER_QUEUE_OUTPUT}"
+}
+
 deploy_arkivum()
 {
     # Establish session
@@ -398,7 +422,11 @@ main()
     log_info "  AWS Access Key: $(aws_get_access_key "${RDSS_ADAPTER_AWS_ACCESS_KEY}")"
     log_info "  AWS Secret Key: $(aws_get_secret_key "${RDSS_ADAPTER_AWS_SECRET_KEY}")"
     log_info "  AWS Region:     ${AWS_REGION}"
-    log_info "  Resources:"
+    if [ "${RDSS_ADAPTER_CREATE_AWS_RESOURCES}" == "true" ] ; then
+      log_info "  Resources: (will be created)"
+    else
+      log_info "  Resources:"
+    fi
     log_info "    DynamoDB Tables:"
     log_info "      Checkpoints: ${RDSS_ADAPTER_TABLE_CHECKPOINTS}"
     log_info "      Clients:     ${RDSS_ADAPTER_TABLE_CLIENTS}"
@@ -419,6 +447,10 @@ main()
     fi
     # Deploy the NFS server used as shared storage
     deploy_nfs_server
+    if [ "${RDSS_ADAPTER_CREATE_AWS_RESOURCES}" = "true" ] ; then
+        # Create the resources for the Channel Adapter to use
+        create_channel_adapter_resources
+    fi
     # Deploy the docker host that will run Archivematica and NextCloud
     deploy_dockerhost
     log_info "<<<<<< DEPLOYMENT COMPLETE <<<<<"
