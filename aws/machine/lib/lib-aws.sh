@@ -367,6 +367,44 @@ aws_ec2_terminate_instance()
     done
 }
 
+# Attempts to get the AWS access key from the current context. If the given
+# param is not empty then it will be used, otherwise the AWS_ACCESS_KEY_ID
+# environment variable will be used. If this too is empty, then we try to read
+# the value from the ~/.aws/credentials file.
+aws_get_access_key()
+{
+    local access_key="$1"
+    if [ -z "${access_key}" ] ; then
+       # No access key given, use default AWS context
+       if [ ! -z "${AWS_ACCESS_KEY_ID}" ] ; then
+           access_key="${AWS_ACCESS_KEY_ID}"
+       else
+           # Try to read from credentials file
+           access_key="$(grep aws_access_key_id ~/.aws/credentials 2>/dev/null | head -n1 | cut -d\  -f3)"
+       fi
+    fi
+    echo -n "${access_key}"
+}
+
+# Attempts to get the AWS secret key from the current context. If the given
+# param is not empty then it will be used, otherwise the AWS_SECRET_ACCESS_KEY
+# environment variable will be used. If this too is empty, then we try to read
+# the value from the ~/.aws/credentials file.
+aws_get_secret_key()
+{
+    local secret_key="$1"
+    if [ -z "${secret_key}" ] ; then
+       # No secret key given, use default AWS context
+       if [ ! -z "${AWS_SECRET_ACCESS_KEY}" ] ; then
+           secret_key="${AWS_SECRET_ACCESS_KEY}"
+       else
+           # Try to read from credentials file
+           secret_key="$(grep aws_secret_access_key ~/.aws/credentials 2>/dev/null | head -n1 | cut -d\  -f3)"
+       fi
+    fi
+    echo -n "${secret_key}"
+}
+
 # Determines if a keypair with the given name exists. Returns true if it does,
 # or false otherwise.
 aws_keypair_exists()
