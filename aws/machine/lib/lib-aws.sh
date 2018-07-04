@@ -15,6 +15,9 @@ source "${LIB_DIR}/lib-config.sh"
 
 # Amazon Web Services ##########################################################
 
+# AWS CLI v1.11.80 introduced dynamodb tag-resource command
+MIN_AWS_CLI_VERSION="1.11.80"
+
 # Attempts normal authentication with AWS, without Multi-Factor Authentication.
 aws_auth()
 {
@@ -1229,6 +1232,23 @@ aws_sg_remove()
     fi
 }
 
+# Gets the version of the AWS CLI.
+aws_version()
+{
+    aws --version 2>&1 | cut -d\  -f1 | cut -d/ -f2
+}
+
+# Checks that the AWS CLI version is greater than the minimum required.
+aws_version_check()
+{
+    if [ "$(version_value "$(aws_version)")" -ge "$(version_value "${MIN_AWS_CLI_VERSION}")" ] ; then
+        # Version is sufficient
+        return 0
+    fi
+    # Version is too old
+    return 1
+}
+
 # Gets the CIDR for the VPC with the given id.
 aws_vpc_get_cidr()
 {
@@ -1283,6 +1303,20 @@ aws_configure_cloudwatch()
     sudo chkconfig awslogs on && \
     sudo service awslogs restart"
 }
+
+# Converts the given "x.y.z" version string into something that can be compared.
+version_value()
+{
+    echo "$@" | \
+        awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }'
+}
+
+if aws_version_check ; then
+    log_info "AWS CLI version: $(aws_version)"
+else
+    log_fatal "AWS CLI version $(aws_version) is too old, must be at least ${MIN_AWS_CLI_VERSION}. Please upgrade."
+fi
+
 _LIB_AWS_SH="LOADED"
 log_debug "Loaded lib-aws"
 fi # END
