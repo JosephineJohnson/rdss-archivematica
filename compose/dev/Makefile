@@ -10,6 +10,12 @@ ifeq ("$(MOCK_AWS)", "true")
 	override DEFAULT_COMPOSE_FILE=$(DEFAULT_COMPOSE_FILE_2)
 endif
 
+INSTRUMENTATION ?= false
+ifeq ("$(INSTRUMENTATION)", "true")
+	DEFAULT_COMPOSE_FILE_2 := $(shell realpath ../docker-compose.instrumentation.yml):$(DEFAULT_COMPOSE_FILE)
+	override DEFAULT_COMPOSE_FILE=$(DEFAULT_COMPOSE_FILE_2)
+endif
+
 COMPOSE_FILE ?= "${DEFAULT_COMPOSE_FILE}"
 
 VERSION ?= $(shell git describe --tags --always --dirty)
@@ -18,9 +24,17 @@ export VERSION
 all: destroy bootstrap
 	docker-compose ps
 
-build:
+build: build-nextcloud-apps build-docker
+
+build-docker:
 	# Specify compose file explicitly, we don't want to build any other container sets
 	COMPOSE_FILE=$(DEFAULT_COMPOSE_FILE) docker-compose build
+
+build-nextcloud-apps:
+	# Make sure NextCloud apps are built
+	@cd $(BASE_DIR)/../../src/rdss-arkivum-nextcloud/ && \
+		make build-apps && cd $(BASE_DIR)
+
 
 bootstrap: build bootstrap-storage-service bootstrap-dashboard bootstrap-dashboard-frontend restart-mcp-services
 
@@ -76,7 +90,7 @@ bootstrap-dashboard:
 		--rm \
 		--entrypoint /src/dashboard/src/manage.py \
 			archivematica-dashboard \
-				set_agent_code --agent-code=$(VERSION)
+				set_agent_code $(VERSION)
 	# Add initial Dashboard user account
 	docker-compose run \
 		--rm \
@@ -91,7 +105,8 @@ bootstrap-dashboard:
 					--api-key="test" \
 					--ss-url="http://archivematica-storage-service:8000" \
 					--ss-user="test" \
-					--ss-api-key="test"
+					--ss-api-key="test" \
+					--site-url="http://archivematica-dashboard:8000/"
 	# Create RDSS storage locations
 	docker-compose exec archivematica-storage-service \
 		python /rdss/create-storage-locations.py \

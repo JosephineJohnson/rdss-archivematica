@@ -92,6 +92,7 @@ These service sets are defined by the following `docker-compose` configuration f
 
 1. [docker-compose.qa.yml](docker-compose.qa.yml)
 1. [docker-compose.dev.yml](docker-compose.dev.yml)
+1. [docker-compose.am-shib.dev.yml](docker-compose.am-shib.dev.yml)
 1. [docker-compose.mock-aws.qa.yml](docker-compose.mock-aws.qa.yml)
 1. [docker-compose.mock-aws.dev.yml](docker-compose.mock-aws.dev.yml)
 1. [docker-compose.am-shib.yml](docker-compose.am-shib.yml)
@@ -168,7 +169,7 @@ There is no Shibboleth integration in this usage. To enable Shibboleth, use this
 
 	make all ENV=dev SHIBBOLETH_CONFIG=archivematica
 
-This will include additional services defined in [docker-compose.am-shib.yml](docker-compose.am-shib.yml) in addition to those in [docker-compose.dev.yml](docker-compose.dev.yml).
+This will include additional services defined in [docker-compose.am-shib.dev.yml](docker-compose.am-shib.dev.yml) in addition to those in [docker-compose.dev.yml](docker-compose.dev.yml).
 
 By default this will include the local example Shibboleth IdP in [docker-compose.shib-local.yml](docker-compose.shib-local.yml) too. In future it may be possible to define a different Shibboleth IdP using the `SHIBBOLETH_IDP` environment variable (e.g. to use the UKAMF or UKAMF test IdPs). Alternatively, the `SHIBBOLETH_IDP_ENTITY_ID` and `SHIBBOLETH_IDP_METADATA_URL` environment variables may be used to override this. To use an alternative IdP and prevent the local IdP from being created, use `SHIBBOLETH_IDP=false`.
 
@@ -195,7 +196,6 @@ After a successful build of the Shibboleth-enabled Archivematica services and Ne
 	rdss_nginx-ssl_1                                      /usr/local/bin/ep -v /etc/ ...   Up       0.0.0.0:443->443/tcp, 80/tcp
 	rdss_nginx_1                                          nginx -g daemon off;             Up       0.0.0.0:34057->80/tcp, 0.0.0.0:34056->8000/tcp
 	rdss_rdss-archivematica-channel-adapter-consumer_1    /go/bin/rdss-archivematica ...   Up       0.0.0.0:34061->6060/tcp
-	rdss_rdss-archivematica-channel-adapter-publisher_1   /go/bin/rdss-archivematica ...   Exit 1
 	rdss_rdss-archivematica-msgcreator_1                  /go/bin/rdss-archivematica ...   Up       8000/tcp
 	rdss_redis_1                                          docker-entrypoint.sh --sav ...   Up       6379/tcp
 	rdss_shib-sp-proxy_1                                  /usr/local/bin/run-app.sh        Up       80/tcp
@@ -268,6 +268,8 @@ Channel Adapter
 -----------------
 
 The RDSS Channel Adapter publisher and consumer require access to AWS services, namely DynamoDB, Kinesis and S3. If these are not available, for example on a local development or QA environment, then mock services will be used instead. However, if you do wish to use real AWS services, the following will be of use.
+
+The publisher is not being used at the moment since we're not producing messages yet.
 
 In addition, the names of the queues to use for a deployment must be specified. For local usage, the defaults are fine, but for real usage they should include the deployment id too.
 

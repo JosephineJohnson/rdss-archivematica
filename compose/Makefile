@@ -49,6 +49,13 @@ ifeq ("$(MOCK_AWS)", "true")
 	override COMPOSE_FILE=$(COMPOSE_FILE_2)
 endif
 
+# Do we want Instrumentation?
+INSTRUMENTATION ?= false
+ifeq ("$(INSTRUMENTATION)", "true")
+	COMPOSE_FILE_2 := $(shell realpath ${CURDIR}/docker-compose.instrumentation.yml):$(COMPOSE_FILE)
+	override COMPOSE_FILE=$(COMPOSE_FILE_2)
+endif
+
 ifeq ("$(ENV)", "dev")
 	# Include qa config because dev overrides/extends this
 	COMPOSE_FILE_2 := $(shell realpath ${CURDIR}/docker-compose.qa.yml):$(COMPOSE_FILE)
@@ -57,7 +64,9 @@ ifeq ("$(ENV)", "dev")
 		COMPOSE_FILE_3 := $(shell realpath ${CURDIR}/docker-compose.mock-aws.qa.yml):$(COMPOSE_FILE_2)
 		override COMPOSE_FILE_2=$(COMPOSE_FILE_3)
 	endif
-	override COMPOSE_FILE=$(COMPOSE_FILE_2)
+        # Use am-shib.dev.yml instead am-shib.yml
+        COMPOSE_FILE_4 := $(subst am-shib.yml,am-shib.dev.yml,$(COMPOSE_FILE_2))
+        override COMPOSE_FILE=$(COMPOSE_FILE_4)
 endif
 export COMPOSE_FILE
 
@@ -65,7 +74,7 @@ export COMPOSE_FILE
 VERSION ?= $(shell git describe --tags --always --dirty)
 export VERSION
 
-all: destroy build create-secrets up bootstrap list
+all: destroy build create-secrets up bootstrap restart-all-services list
 
 bootstrap create-secrets reset-processing-configs:
 	$(foreach DIR, $(COMPOSE_DIRS), $(MAKE) -C $(DIR) $@ ;)
@@ -95,7 +104,9 @@ create-volumes:
 	@mkdir -p ${AM_PIPELINE_DATA}
 	@docker volume create --opt type=none --opt o=bind \
 		--opt device=$(AM_PIPELINE_DATA) $(COMPOSE_PROJECT_NAME)_am-pipeline-data
-	@mkdir -p ${SS_LOCATION_DATA}/automated ${SS_LOCATION_DATA}/interactive
+	@mkdir -p ${SS_LOCATION_DATA}/automated \
+		${SS_LOCATION_DATA}/interactive \
+		${SS_LOCATION_DATA}/adapter
 	@docker volume create --opt type=none --opt o=bind \
 		--opt device=$(SS_LOCATION_DATA) $(COMPOSE_PROJECT_NAME)_am-ss-location-data
 	@mkdir -p $(SS_STAGING_DATA)
@@ -175,6 +186,15 @@ destroy-volumes:
 
 list:
 	docker-compose ps
+
+restart-all-services:
+	# Restart all services and then restart again the gearmand and its
+	# dependent services 
+	docker-compose restart
+	docker-compose restart gearmand
+	docker-compose restart archivematica-mcp-client
+	docker-compose restart archivematica-mcp-server
+	docker-compose restart archivematica-dashboard
 
 up:
 	docker-compose up -d

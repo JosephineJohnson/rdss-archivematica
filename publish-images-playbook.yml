@@ -21,9 +21,9 @@
 
     projects:
 
-      - name: "Archivematica (JiscRDSS fork)"
-        repo: "https://github.com/JiscRDSS/archivematica"
-        version: "v0.6.5"
+      - name: "Archivematica"
+        repo: "https://github.com/artefactual/archivematica"
+        version: "qa/1.x" # To be soon: v1.8.0
         dest: "./src/archivematica"
         images:
           - name: "{{ registry }}archivematica-dashboard"
@@ -36,9 +36,9 @@
             path: "./src/archivematica/src/"
             dockerfile: "MCPClient.Dockerfile"
 
-      - name: "Archivematica Storage Service (JiscRDSS fork)"
-        repo: "https://github.com/JiscRDSS/archivematica-storage-service"
-        version: "v0.4.0"
+      - name: "Archivematica Storage Service"
+        repo: "https://github.com/artefactual/archivematica-storage-service"
+        version: "qa/0.x" # To be soon: v0.12.0
         dest: "./src/archivematica-storage-service"
         images:
           - name: "{{ registry }}archivematica-storage-service"
@@ -56,7 +56,7 @@
 
       - name: "RDSS Archivematica Channel Adapter"
         repo: "https://github.com/JiscRDSS/rdss-archivematica-channel-adapter"
-        version: "v0.6.1"
+        version: "master" # To be soon: v0.7.0
         dest: "./src/rdss-archivematica-channel-adapter"
         images:
           - name: "{{ registry }}rdss-archivematica-channel-adapter"
@@ -123,13 +123,11 @@
         # Ignore false ANSIBLE0016 claiming this task should be a handler
         - skip_ansible_lint
 
-    # Don't tag as 'latest' if version contains 'rc' or rdss_version does
+    # Don't tag as 'latest' if version contains 'rc'
     - name: "Build and tag images"
       command: "docker build
         -t {{ item.1.name }}:{{ item.0.item.version | regex_replace('/', '_')  | truncate(128, True)}}
-        {{ '-t ' + item.1.name + ':latest' if (env != 'jisc') or 'rc' not in item.0.item.version and 'rc' not in rdss_version else '' }}
-        --build-arg ARCHIVEMATICA_VERSION={{ rdss_version }}
-        --build-arg AGENT_CODE={{ rdss_version }}
+        {{ '-t ' + item.1.name + ':latest' if (env != 'jisc') or 'rc' not in item.0.item.version else '' }}
         -f {{ item.1.dockerfile }} ."
       args:
         chdir: "{{ item.1.path }}"
