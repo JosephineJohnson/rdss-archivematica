@@ -145,6 +145,9 @@ RDSS_ADAPTER_CREATE_AWS_RESOURCES=${RDSS_ADAPTER_CREATE_AWS_RESOURCES:-'false'}
 # streams.
 RDSS_ADAPTER_KINESIS_ROLE="${RDSS_ADAPTER_KINESIS_ROLE}"
 
+# ExternalId used in IAM role for cross account access
+RDSS_ADAPTER_KINESIS_ROLE_EXTERNAL_ID="${RDSS_ADAPTER_KINESIS_ROLE_EXTERNAL_ID}"
+
 # The name of the queue for the Channel Adapter to send error messages to. This
 # queue will be created if it doesn't exist. Default is
 # "institution_${PROJECT_ID}_error_${ENVIRONMENT}" because this is what Jisc use

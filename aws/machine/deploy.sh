@@ -125,6 +125,7 @@ deploy_containers() {
             export RDSS_ADAPTER_KINESIS_AWS_REGION=\"${AWS_REGION}\" ; \
             export RDSS_ADAPTER_KINESIS_ENDPOINT='' ; \
             export RDSS_ADAPTER_KINESIS_ROLE=\"${RDSS_ADAPTER_KINESIS_ROLE}\" ; \
+            export RDSS_ADAPTER_KINESIS_ROLE_EXTERNAL_ID=\"${RDSS_ADAPTER_KINESIS_ROLE_EXTERNAL_ID}\" ; \
             export RDSS_ADAPTER_KINESIS_TLS='true' ; \
             export RDSS_ADAPTER_QUEUE_ERROR=\"${RDSS_ADAPTER_QUEUE_ERROR}\" ; \
             export RDSS_ADAPTER_QUEUE_INPUT=\"${RDSS_ADAPTER_QUEUE_INPUT}\" ; \
