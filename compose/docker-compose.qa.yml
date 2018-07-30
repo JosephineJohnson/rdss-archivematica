@@ -282,6 +282,7 @@ services:
       - "archivematica-dashboard"
     volumes:
       - "archivematica_pipeline_data:/var/archivematica/sharedDirectory:rw"
+      - "archivematica_storage_service_location_data:/home:rw"
     ports:
       - "6060" # See net/http/pprof
 
