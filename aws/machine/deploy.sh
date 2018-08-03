@@ -43,6 +43,30 @@ fi
 
 # Deployments ##################################################################
 
+create_channel_adapter_resources()
+{
+    # Establish session
+    session_get
+    # Create DynamoDB tables
+    aws_dynamodb_create_table "${RDSS_ADAPTER_TABLE_CHECKPOINTS}" \
+        "AttributeName=Shard,KeyType=HASH" \
+        "AttributeName=Shard,AttributeType=S" \
+        "ReadCapacityUnits=10,WriteCapacityUnits=10"
+    aws_dynamodb_create_table "${RDSS_ADAPTER_TABLE_CLIENTS}" \
+        "AttributeName=ID,KeyType=HASH" \
+        "AttributeName=ID,AttributeType=S" \
+        "ReadCapacityUnits=10,WriteCapacityUnits=10"
+    aws_dynamodb_create_table "${RDSS_ADAPTER_TABLE_METADATA}" \
+        "AttributeName=Key,KeyType=HASH" \
+        "AttributeName=Key,AttributeType=S" \
+        "ReadCapacityUnits=10,WriteCapacityUnits=10"
+    # Create Kinesis streams
+    aws_kinesis_create_stream "${RDSS_ADAPTER_QUEUE_ERROR}"
+    aws_kinesis_create_stream "${RDSS_ADAPTER_QUEUE_INPUT}"
+    aws_kinesis_create_stream "${RDSS_ADAPTER_QUEUE_INVALID}"
+    aws_kinesis_create_stream "${RDSS_ADAPTER_QUEUE_OUTPUT}"
+}
+
 deploy_arkivum()
 {
     # Establish session
@@ -86,6 +110,32 @@ deploy_containers() {
             NEXTCLOUD_THEMES=/mnt/nfs/nextcloud-themes \
             SS_LOCATION_DATA=/mnt/nfs/am-ss-default-location-data \
             SS_STAGING_DATA=/mnt/nfs/am-ss-staging-data"
+    # If we're not using mock AWS, configure AWS service vars
+    local aws_var_exports=""
+    if [ "${MOCK_AWS}" != "true" ] ; then
+        # Get access and secret keys 'live', because they may not have been set
+        # at init time
+        local -r access_key="$(aws_get_access_key "${RDSS_ADAPTER_AWS_ACCESS_KEY}")"
+        local -r secret_key="$(aws_get_secret_key "${RDSS_ADAPTER_AWS_SECRET_KEY}")"
+        # Define the various exports for the channel adapter
+        aws_var_exports="export RDSS_ADAPTER_DYNAMODB_ENDPOINT='' ; \
+            export RDSS_ADAPTER_DYNAMODB_TLS='true' ; \
+            export RDSS_ADAPTER_KINESIS_AWS_ACCESS_KEY=\"${access_key}\" ; \
+            export RDSS_ADAPTER_KINESIS_AWS_SECRET_KEY=\"${secret_key}\" ; \
+            export RDSS_ADAPTER_KINESIS_AWS_REGION=\"${AWS_REGION}\" ; \
+            export RDSS_ADAPTER_KINESIS_ENDPOINT='' ; \
+            export RDSS_ADAPTER_KINESIS_ROLE=\"${RDSS_ADAPTER_KINESIS_ROLE}\" ; \
+            export RDSS_ADAPTER_KINESIS_ROLE_EXTERNAL_ID=\"${RDSS_ADAPTER_KINESIS_ROLE_EXTERNAL_ID}\" ; \
+            export RDSS_ADAPTER_KINESIS_TLS='true' ; \
+            export RDSS_ADAPTER_QUEUE_ERROR=\"${RDSS_ADAPTER_QUEUE_ERROR}\" ; \
+            export RDSS_ADAPTER_QUEUE_INPUT=\"${RDSS_ADAPTER_QUEUE_INPUT}\" ; \
+            export RDSS_ADAPTER_QUEUE_INVALID=\"${RDSS_ADAPTER_QUEUE_INVALID}\" ; \
+            export RDSS_ADAPTER_QUEUE_OUTPUT=\"${RDSS_ADAPTER_QUEUE_OUTPUT}\" ; \
+            export RDSS_ADAPTER_S3_ENDPOINT='' ; \
+            export RDSS_ADAPTER_S3_AWS_ACCESS_KEY=\"${RDSS_ADAPTER_AWS_ACCESS_KEY}\" ; \
+            export RDSS_ADAPTER_S3_AWS_SECRET_KEY=\"${RDSS_ADAPTER_AWS_SECRET_KEY}\" ; \
+            export RDSS_ADAPTER_S3_AWS_REGION=\"${AWS_REGION}\""
+    fi
     # Use docker machine to run make to deploy the containers
     docker-machine ssh "${DOCKERHOST_INSTANCE}" \
         "cd ~/src/rdss-archivematica/compose ; \
@@ -96,7 +146,10 @@ deploy_containers() {
         export IDP_EXTERNAL_IP='0.0.0.0' ; \
         export IDP_EXTERNAL_PORT=4443 ; \
         export REGISTRY=localhost:5000/ ; \
-            make all SHIBBOLETH_CONFIG=${SHIBBOLETH_CONFIG}"
+        ${aws_var_exports} ; \
+            make all \
+                MOCK_AWS=${MOCK_AWS} \
+                SHIBBOLETH_CONFIG=${SHIBBOLETH_CONFIG}"
     # Use docker machine to copy sample data from compose dev src to minio
     docker-machine ssh "${DOCKERHOST_INSTANCE}" \
         "sudo rsync -avz \
@@ -366,6 +419,24 @@ main()
     fi
     log_info "  NextCloud:                     ${nextcloud_url}"
     log_info "  RDSS Archivematica MsgCreator: ${am_dash_url}msgcreator"
+    log_info "The Channel Adapter will use the following settings:"
+    log_info "  AWS Access Key: $(aws_get_access_key "${RDSS_ADAPTER_AWS_ACCESS_KEY}")"
+    log_info "  AWS Secret Key: $(aws_get_secret_key "${RDSS_ADAPTER_AWS_SECRET_KEY}")"
+    log_info "  AWS Region:     ${AWS_REGION}"
+    if [ "${RDSS_ADAPTER_CREATE_AWS_RESOURCES}" == "true" ] ; then
+      log_info "  Resources: (will be created)"
+    else
+      log_info "  Resources:"
+    fi
+    log_info "    DynamoDB Tables:"
+    log_info "      Checkpoints: ${RDSS_ADAPTER_TABLE_CHECKPOINTS}"
+    log_info "      Clients:     ${RDSS_ADAPTER_TABLE_CLIENTS}"
+    log_info "      Metadata:    ${RDSS_ADAPTER_TABLE_METADATA}"
+    log_info "    Kinesis Streams:"
+    log_info "      Input:       ${RDSS_ADAPTER_QUEUE_INPUT}"
+    log_info "      Output:      ${RDSS_ADAPTER_QUEUE_OUTPUT}"
+    log_info "      Error:       ${RDSS_ADAPTER_QUEUE_ERROR}"
+    log_info "      Invalid:     ${RDSS_ADAPTER_QUEUE_INVALID}"
     log_note "If this looks incorrect, abort now using CTRL+C ..."
     sleep 10
     log_info ">>>>>> DEPLOYING >>>>>"
@@ -377,6 +448,10 @@ main()
     fi
     # Deploy the NFS server used as shared storage
     deploy_nfs_server
+    if [ "${RDSS_ADAPTER_CREATE_AWS_RESOURCES}" = "true" ] ; then
+        # Create the resources for the Channel Adapter to use
+        create_channel_adapter_resources
+    fi
     # Deploy the docker host that will run Archivematica and NextCloud
     deploy_dockerhost
     log_info "<<<<<< DEPLOYMENT COMPLETE <<<<<"

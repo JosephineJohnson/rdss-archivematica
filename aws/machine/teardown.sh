@@ -62,6 +62,23 @@ teardown_arkivum()
     log_info "Arkivum appliance '${ARKIVUM_INSTANCE}' has been destroyed."
 }
 
+teardown_channel_adapter_resources()
+{
+    # Establish session
+    session_get
+    # Delete DynamoDB tables
+    aws_dynamodb_delete_table "${RDSS_ADAPTER_TABLE_CHECKPOINTS}"
+    aws_dynamodb_delete_table "${RDSS_ADAPTER_TABLE_CLIENTS}"
+    aws_dynamodb_delete_table "${RDSS_ADAPTER_TABLE_METADATA}"
+    if [ ! -z "${DESTROY_KINESIS_QUEUES}" ] ; then
+       # Delete Kinesis streams
+       aws_kinesis_delete_stream "${RDSS_ADAPTER_QUEUE_ERROR}"
+       aws_kinesis_delete_stream "${RDSS_ADAPTER_QUEUE_INPUT}"
+       aws_kinesis_delete_stream "${RDSS_ADAPTER_QUEUE_INVALID}"
+       aws_kinesis_delete_stream "${RDSS_ADAPTER_QUEUE_OUTPUT}"
+    fi
+}
+
 teardown_dockerhost()
 {
     log_info "Destroying Docker host '${DOCKERHOST_INSTANCE}' ..."
@@ -157,6 +174,10 @@ main()
     if [ ! -z "${ARKIVUM_ENABLED}" ] ; then
         # Tear down the Arkivum appliance
         teardown_arkivum
+    fi
+    if [ "${RDSS_ADAPTER_CREATE_AWS_RESOURCES}" = "true" ] ; then
+        # Tear down Channel Adapter resources
+        teardown_channel_adapter_resources
     fi
     # Tear down the hosted zones
     teardown_hosted_zones

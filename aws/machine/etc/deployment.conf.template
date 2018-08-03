@@ -20,6 +20,10 @@ VPC_ID=${VPC_ID:-"<your-vpc-id>"}
 # then the first subnet of the VPC will be used.
 SUBNET_ID=${SUBNET_ID}
 
+# Whether or not to mock AWS services (DynamoDB, Kinesis, S3). Defaults to true.
+MOCK_AWS=${MOCK_AWS:-'true'}
+
+
 # Deployment ###################################################################
 
 # The SSH key to use to secure the deployed instances.
@@ -55,6 +59,7 @@ PUBLIC_HOSTED_ZONE=${PUBLIC_HOSTED_ZONE:-"${PRIVATE_HOSTED_ZONE}.${PUBLIC_DOMAIN
 # The version or branch of RDSSARK to deploy. Default is 'master'.
 RDSSARK_VERSION=${RDSSARK_VERSION:-"master"}
 
+
 # Arkivum appliance ############################################################
 
 # Whether or not to include an Arkivum appliance in this deployment. If set to a
@@ -68,6 +73,7 @@ ARKIVUM_INSTANCE=${ARKIVUM_INSTANCE:-"${PROJECT_ID}-${ENVIRONMENT}-arkivum"}
 
 # The EC2 instance type to use for this deployment's Arkivum appliance.
 ARKIVUM_INSTANCE_TYPE=${ARKIVUM_INSTANCE_TYPE:-"t2.nano"}
+
 
 # Docker host ##################################################################
 
@@ -89,6 +95,7 @@ DOCKERHOST_ROOT_SIZE=${DOCKERHOST_ROOT_SIZE:-40}
 # Parameters for the S3 bucket to mount as part of the NextCloud service
 S3_BUCKET_PARAMS=${S3_BUCKET_PARAMS:-""}
 
+
 # NFS server ###################################################################
 
 # Name of the EC2 instance that is running this deployment's NFS server. This
@@ -106,6 +113,7 @@ NFS_STORAGE_SIZE=${NFS_STORAGE_SIZE:-10}
 # size is increased to 500GB or more.
 NFS_STORAGE_VOLUME_TYPE=${NFS_STORAGE_VOLUME_TYPE:-"gp2"}
 
+
 # Application Security #########################################################
 
 # The organisation that 'owns' this domain. Used for SSL certificate information
@@ -114,3 +122,68 @@ DOMAIN_ORGANISATION=${DOMAIN_ORGANISATION:-"Example University"}
 
 # Which Shibboleth config to use, if any. Default is "archivematica".
 SHIBBOLETH_CONFIG=${SHIBBOLETH_CONFIG:-"archivematica"}
+
+
+# RDSS Channel Adapter #########################################################
+
+# The access key the Channel Adapter should use to access services. Defaults to
+# the currently defined AWS_ACCESS_KEY_ID value.
+RDSS_ADAPTER_AWS_ACCESS_KEY=${RDSS_ADAPTER_AWS_ACCESS_KEY:-"${AWS_ACCESS_KEY_ID}"}
+
+# The secret key the Channel Adapter should use to access services. Defaults to
+# the currently defined AWS_SECRET_ACCESS_KEY value.
+RDSS_ADAPTER_AWS_SECRET_KEY=${RDSS_ADAPTER_AWS_SECRET_KEY:-"${AWS_SECRET_ACCESS_KEY}"}
+
+# Whether or not to attempt to create the AWS resources required by the Channel
+# Adapter, such as DynamoDB tables and Kinesis streams. If MOCK_AWS is true then
+# the created resources will be created in the mock services, otherwise real AWS
+# services will be used. Default is 'false', which means that the resources must
+# be created by some other means.
+RDSS_ADAPTER_CREATE_AWS_RESOURCES=${RDSS_ADAPTER_CREATE_AWS_RESOURCES:-'false'}
+
+# The IAM role that the channel adapter should use when connecting to Kinesis
+# streams.
+RDSS_ADAPTER_KINESIS_ROLE="${RDSS_ADAPTER_KINESIS_ROLE}"
+
+# ExternalId used in IAM role for cross account access
+RDSS_ADAPTER_KINESIS_ROLE_EXTERNAL_ID="${RDSS_ADAPTER_KINESIS_ROLE_EXTERNAL_ID}"
+
+# The name of the queue for the Channel Adapter to send error messages to. This
+# queue will be created if it doesn't exist. Default is
+# "institution_${PROJECT_ID}_error_${ENVIRONMENT}" because this is what Jisc use
+# for their environment.
+RDSS_ADAPTER_QUEUE_ERROR=institution_${PROJECT_ID}_error_${ENVIRONMENT}
+
+# The name of the queue for the Channel Adapter to read messages from. This
+# queue will be created if it doesn't exist. Default is
+# "institution_${PROJECT_ID}_input_${ENVIRONMENT}" because this is what Jisc use
+# for their environment.
+RDSS_ADAPTER_QUEUE_INPUT=institution_${PROJECT_ID}_input_${ENVIRONMENT}
+
+# The name of the queue for the Channel Adapter to send invalid messages to.
+# This queue will be created if it doesn't exist. Default is
+# "institution_${PROJECT_ID}_invalid_${ENVIRONMENT}" because this is what Jisc
+# use for their environment.
+RDSS_ADAPTER_QUEUE_INVALID=institution_${PROJECT_ID}_invalid_${ENVIRONMENT}
+
+# The name of the queue for the Channel Adapter to send messages to. This queue
+# will be created if it doesn't exist. Default is
+# "institution_${PROJECT_ID}_output_${ENVIRONMENT}" because this is what Jisc
+# use for their environment.
+RDSS_ADAPTER_QUEUE_OUTPUT=institution_${PROJECT_ID}_output_${ENVIRONMENT}
+
+# The name of the table to use for checkpoints data. This table will be created
+# if it doesn't exist. Default is
+# "rdss_adapter_${PROJECT_ID}_${ENVIRONMENT}_checkpoints".
+RDSS_ADAPTER_TABLE_CHECKPOINTS=rdss_adapter_${PROJECT_ID}_${ENVIRONMENT}_checkpoints
+
+# The name of the table to use for clients data. This table will be created
+# if it doesn't exist. Default is
+# "rdss_adapter_${PROJECT_ID}_${ENVIRONMENT}_clients".
+RDSS_ADAPTER_TABLE_CLIENTS=rdss_adapter_${PROJECT_ID}_${ENVIRONMENT}_clients
+
+# The name of the table to use for metadata data. This table will be created if
+# it doesn't exist. Default is
+# "rdss_adapter_${PROJECT_ID}_${ENVIRONMENT}_metadata".
+RDSS_ADAPTER_TABLE_METADATA=rdss_adapter_${PROJECT_ID}_${ENVIRONMENT}_metadata
+
