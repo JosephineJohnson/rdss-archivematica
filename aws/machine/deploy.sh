@@ -60,6 +60,14 @@ create_channel_adapter_resources()
         "AttributeName=Key,KeyType=HASH" \
         "AttributeName=Key,AttributeType=S" \
         "ReadCapacityUnits=10,WriteCapacityUnits=10"
+    aws_dynamodb_create_table "${RDSS_ADAPTER_CONSUMER_DYNAMODB_TABLE}" \
+        "AttributeName=Key,KeyType=HASH" \
+        "AttributeName=Key,AttributeType=S" \
+        "ReadCapacityUnits=10,WriteCapacityUnits=10"
+    aws_dynamodb_create_table "${RDSS_ADAPTER_BROKER_REPOSITORY_DYNAMODB_TABLE}" \
+        "AttributeName=Key,KeyType=HASH" \
+        "AttributeName=Key,AttributeType=S" \
+        "ReadCapacityUnits=10,WriteCapacityUnits=10"
     # Create Kinesis streams
     aws_kinesis_create_stream "${RDSS_ADAPTER_QUEUE_ERROR}"
     aws_kinesis_create_stream "${RDSS_ADAPTER_QUEUE_INPUT}"
@@ -118,12 +126,12 @@ deploy_containers() {
         local -r access_key="$(aws_get_access_key "${RDSS_ADAPTER_AWS_ACCESS_KEY}")"
         local -r secret_key="$(aws_get_secret_key "${RDSS_ADAPTER_AWS_SECRET_KEY}")"
         # Define the various exports for the channel adapter
-        aws_var_exports="export RDSS_ADAPTER_DYNAMODB_ENDPOINT='' ; \
+        aws_var_exports="export RDSS_ADAPTER_DYNAMODB_ENDPOINT='dynamodb.eu-west-2.amazonaws.com' ; \
             export RDSS_ADAPTER_DYNAMODB_TLS='true' ; \
             export RDSS_ADAPTER_KINESIS_AWS_ACCESS_KEY=\"${access_key}\" ; \
             export RDSS_ADAPTER_KINESIS_AWS_SECRET_KEY=\"${secret_key}\" ; \
             export RDSS_ADAPTER_KINESIS_AWS_REGION=\"${AWS_REGION}\" ; \
-            export RDSS_ADAPTER_KINESIS_ENDPOINT='' ; \
+            export RDSS_ADAPTER_KINESIS_ENDPOINT='kinesis.eu-west-2.amazonaws.com' ; \
             export RDSS_ADAPTER_KINESIS_ROLE=\"${RDSS_ADAPTER_KINESIS_ROLE}\" ; \
             export RDSS_ADAPTER_KINESIS_ROLE_EXTERNAL_ID=\"${RDSS_ADAPTER_KINESIS_ROLE_EXTERNAL_ID}\" ; \
             export RDSS_ADAPTER_KINESIS_TLS='true' ; \
@@ -131,7 +139,7 @@ deploy_containers() {
             export RDSS_ADAPTER_QUEUE_INPUT=\"${RDSS_ADAPTER_QUEUE_INPUT}\" ; \
             export RDSS_ADAPTER_QUEUE_INVALID=\"${RDSS_ADAPTER_QUEUE_INVALID}\" ; \
             export RDSS_ADAPTER_QUEUE_OUTPUT=\"${RDSS_ADAPTER_QUEUE_OUTPUT}\" ; \
-            export RDSS_ADAPTER_S3_ENDPOINT='' ; \
+            export RDSS_ADAPTER_S3_ENDPOINT='s3.eu-west-2.amazonaws.com' ; \
             export RDSS_ADAPTER_S3_AWS_ACCESS_KEY=\"${RDSS_ADAPTER_AWS_ACCESS_KEY}\" ; \
             export RDSS_ADAPTER_S3_AWS_SECRET_KEY=\"${RDSS_ADAPTER_AWS_SECRET_KEY}\" ; \
             export RDSS_ADAPTER_S3_AWS_REGION=\"${AWS_REGION}\""
@@ -432,6 +440,8 @@ main()
     log_info "      Checkpoints: ${RDSS_ADAPTER_TABLE_CHECKPOINTS}"
     log_info "      Clients:     ${RDSS_ADAPTER_TABLE_CLIENTS}"
     log_info "      Metadata:    ${RDSS_ADAPTER_TABLE_METADATA}"
+    log_info "      Messages:    ${RDSS_ADAPTER_BROKER_REPOSITORY_DYNAMODB_TABLE}"
+    log_info "      Consumer Storage:    ${RDSS_ADAPTER_CONSUMER_DYNAMODB_TABLE}"
     log_info "    Kinesis Streams:"
     log_info "      Input:       ${RDSS_ADAPTER_QUEUE_INPUT}"
     log_info "      Output:      ${RDSS_ADAPTER_QUEUE_OUTPUT}"
