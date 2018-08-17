@@ -152,25 +152,25 @@ RDSS_ADAPTER_KINESIS_ROLE_EXTERNAL_ID="${RDSS_ADAPTER_KINESIS_ROLE_EXTERNAL_ID}"
 # queue will be created if it doesn't exist. Default is
 # "institution_${PROJECT_ID}_error_${ENVIRONMENT}" because this is what Jisc use
 # for their environment.
-RDSS_ADAPTER_QUEUE_ERROR=institution_${PROJECT_ID}_error_${ENVIRONMENT}
+RDSS_ADAPTER_QUEUE_ERROR=${RDSS_ADAPTER_QUEUE_ERROR:-"institution_${PROJECT_ID}_error_${ENVIRONMENT}"}
 
 # The name of the queue for the Channel Adapter to read messages from. This
 # queue will be created if it doesn't exist. Default is
 # "institution_${PROJECT_ID}_input_${ENVIRONMENT}" because this is what Jisc use
 # for their environment.
-RDSS_ADAPTER_QUEUE_INPUT=institution_${PROJECT_ID}_input_${ENVIRONMENT}
+RDSS_ADAPTER_QUEUE_INPUT=${RDSS_ADAPTER_QUEUE_INPUT:-"institution_${PROJECT_ID}_input_${ENVIRONMENT}"}
 
 # The name of the queue for the Channel Adapter to send invalid messages to.
 # This queue will be created if it doesn't exist. Default is
 # "institution_${PROJECT_ID}_invalid_${ENVIRONMENT}" because this is what Jisc
 # use for their environment.
-RDSS_ADAPTER_QUEUE_INVALID=institution_${PROJECT_ID}_invalid_${ENVIRONMENT}
+RDSS_ADAPTER_QUEUE_INVALID=${RDSS_ADAPTER_QUEUE_INVALID:-"institution_${PROJECT_ID}_invalid_${ENVIRONMENT}"}
 
 # The name of the queue for the Channel Adapter to send messages to. This queue
 # will be created if it doesn't exist. Default is
 # "institution_${PROJECT_ID}_output_${ENVIRONMENT}" because this is what Jisc
 # use for their environment.
-RDSS_ADAPTER_QUEUE_OUTPUT=institution_${PROJECT_ID}_output_${ENVIRONMENT}
+RDSS_ADAPTER_QUEUE_OUTPUT=${RDSS_ADAPTER_QUEUE_OUTPUT:-"institution_${PROJECT_ID}_output_${ENVIRONMENT}"}
 
 # The name of the table to use for checkpoints data. This table will be created
 # if it doesn't exist. Default is
