@@ -23,7 +23,7 @@
 
       - name: "Archivematica"
         repo: "https://github.com/artefactual/archivematica"
-        version: "a0a025d2a9e04a7c3c07768bedfd5f3c849d4997" # To be soon: v1.8.0
+        version: "bf9a06c70ede787e687d1be449b5282e4c053e1f" # To be soon: v1.8.0
         dest: "./src/archivematica"
         images:
           - name: "{{ registry }}archivematica-dashboard"
@@ -65,7 +65,7 @@
 
       - name: "RDSS Arkivum NextCloud"
         repo: "https://github.com/JiscRDSS/rdss-arkivum-nextcloud"
-        version: "v0.5.1"
+        version: "v0.5.2"
         dest: "./src/rdss-arkivum-nextcloud"
         make_target: "build-apps"
         images:
