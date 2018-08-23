@@ -158,7 +158,6 @@ deploy_containers() {
                 MOCK_AWS=${MOCK_AWS} \
                 SHIBBOLETH_CONFIG=${SHIBBOLETH_CONFIG}"
     else
-        # Use docker machine to run make to deploy the containers
         docker-machine ssh "${DOCKERHOST_INSTANCE}" \
         "cd ~/src/rdss-archivematica/compose ; \
         export VOL_BASE=\$(pwd) ; \
@@ -171,8 +170,7 @@ deploy_containers() {
         make all \
                 MOCK_AWS=${MOCK_AWS} \
                 SHIBBOLETH_CONFIG=${SHIBBOLETH_CONFIG}"
-
-    fi
+    fi   
     # Use docker machine to copy sample data from compose dev src to minio
     docker-machine ssh "${DOCKERHOST_INSTANCE}" \
         "sudo rsync -avz \
