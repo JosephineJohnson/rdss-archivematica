@@ -143,6 +143,7 @@ deploy_containers() {
             export RDSS_ADAPTER_S3_AWS_ACCESS_KEY=\"${RDSS_ADAPTER_AWS_ACCESS_KEY}\" ; \
             export RDSS_ADAPTER_S3_AWS_SECRET_KEY=\"${RDSS_ADAPTER_AWS_SECRET_KEY}\" ; \
             export RDSS_ADAPTER_S3_AWS_REGION=\"${AWS_REGION}\""
+        # Use docker machine to run make to deploy the containers
         docker-machine ssh "${DOCKERHOST_INSTANCE}" \
         "cd ~/src/rdss-archivematica/compose ; \
         export VOL_BASE=\$(pwd) ; \
@@ -157,6 +158,7 @@ deploy_containers() {
                 MOCK_AWS=${MOCK_AWS} \
                 SHIBBOLETH_CONFIG=${SHIBBOLETH_CONFIG}"
     else
+        # Use docker machine to run make to deploy the containers
         docker-machine ssh "${DOCKERHOST_INSTANCE}" \
         "cd ~/src/rdss-archivematica/compose ; \
         export VOL_BASE=\$(pwd) ; \
@@ -171,20 +173,6 @@ deploy_containers() {
                 SHIBBOLETH_CONFIG=${SHIBBOLETH_CONFIG}"
 
     fi
-    # Use docker machine to run make to deploy the containers
-    docker-machine ssh "${DOCKERHOST_INSTANCE}" \
-        "cd ~/src/rdss-archivematica/compose ; \
-        export VOL_BASE=\$(pwd) ; \
-        export DOMAIN_NAME=${PUBLIC_HOSTED_ZONE} ; \
-        export DOMAIN_ORGANISATION=${DOMAIN_ORGANISATION} ; \
-        export NGINX_EXTERNAL_IP='0.0.0.0' ; \
-        export IDP_EXTERNAL_IP='0.0.0.0' ; \
-        export IDP_EXTERNAL_PORT=4443 ; \
-        export REGISTRY=localhost:5000/ ; \
-        ${aws_var_exports} ; \
-            make all \
-                MOCK_AWS=${MOCK_AWS} \
-                SHIBBOLETH_CONFIG=${SHIBBOLETH_CONFIG}"
     # Use docker machine to copy sample data from compose dev src to minio
     docker-machine ssh "${DOCKERHOST_INSTANCE}" \
         "sudo rsync -avz \
