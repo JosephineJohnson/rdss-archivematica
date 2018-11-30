@@ -23,7 +23,7 @@
 
       - name: "Archivematica"
         repo: "https://github.com/artefactual/archivematica"
-        version: "bf9a06c70ede787e687d1be449b5282e4c053e1f" # To be soon: v1.8.0
+        version: "v1.8.0"
         dest: "./src/archivematica"
         images:
           - name: "{{ registry }}archivematica-dashboard"
@@ -38,7 +38,7 @@
 
       - name: "Archivematica Storage Service"
         repo: "https://github.com/artefactual/archivematica-storage-service"
-        version: "7252debcb839dde76f6b7d0ab915b87391df05af" # To be soon: v0.12.0
+        version: "v0.13.0"
         dest: "./src/archivematica-storage-service"
         images:
           - name: "{{ registry }}archivematica-storage-service"
