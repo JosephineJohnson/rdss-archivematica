@@ -47,7 +47,7 @@ services:
 
   # TODO Move this to dev. For QA we should use AWS RDS instead.
   mysql:
-    image: "percona:5.6"
+    image: "percona:5.6-stretch"
     user: "mysql"
     environment:
       MYSQL_ROOT_PASSWORD: "12345"
