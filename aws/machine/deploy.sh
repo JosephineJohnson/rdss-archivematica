@@ -119,7 +119,7 @@ deploy_containers() {
             SS_LOCATION_DATA=/mnt/nfs/am-ss-default-location-data \
             SS_STAGING_DATA=/mnt/nfs/am-ss-staging-data"
     # If we're not using mock AWS, configure AWS service vars
-    local aws_var_exports=""
+    aws_var_exports=""
     if [ "${MOCK_AWS}" != "true" ] ; then
         # Get access and secret keys 'live', because they may not have been set
         # at init time
@@ -397,6 +397,69 @@ prepare_dockerhost()
             cd ${clone_dir} && make publish REGISTRY=localhost:5000/"
 }
 
+# Saves deployment settings at:
+# logs/${PROJECT_ID}_${ENVIRONMENT}_${DATE}
+# dockerhost:/home/ubuntu/${PROJECT_ID}_${ENVIRONMENT}_${DATE}
+saveconfig_deploy()
+{
+    LIST_VARS_DEPLOY=$( cat ${DEPLOYMENT_CONF} | sed 's/^\s*//g' | grep -vE '(^#|^\s*$)' | awk -F= '{print $1}' )
+    DATE=$( date +%Y%m%d-%H%M )
+    mkdir -p saved-configs
+    CONFIG_OUTPUT_FILE="saved-configs/${PROJECT_ID}_${ENVIRONMENT}_${DATE}"
+    for deploy_var in ${LIST_VARS_DEPLOY[*]}; do
+        # Write only non empty vars
+        if [ "${!deploy_var}" != "" ]; then
+            echo "export ${deploy_var}=${!deploy_var}" >> "${CONFIG_OUTPUT_FILE}"
+        fi
+    done
+    log_info "Deploy settings saved in ${CONFIG_OUTPUT_FILE} file"
+    # Save file to docker-host
+    docker-machine ssh "${DOCKERHOST_INSTANCE}" \
+        "mkdir -p /home/ubuntu/saved-configs"
+    docker-machine scp "${CONFIG_OUTPUT_FILE}"\
+        "${DOCKERHOST_INSTANCE}":/home/ubuntu/"${CONFIG_OUTPUT_FILE}"
+    log_info "Deploy settings saved in ${DOCKERHOST_INSTANCE}:/home/ubuntu/${CONFIG_OUTPUT_FILE}"
+}
+
+# Saves compose settings at:
+# logs/compose_${PROJECT_ID}_${ENVIRONMENT}_${DATE}
+# dockerhost:/home/ubuntu/compose_${PROJECT_ID}_${ENVIRONMENT}_${DATE}
+saveconfig_compose()
+{
+    COMPOSE_VAR_LIST=(
+        S3_BUCKET_PARAMS
+        MINIO_EXPORT_DATA
+        VOL_BASE
+        DOMAIN_ORGANISATION
+        NGINX_EXTERNAL_IP
+        IDP_EXTERNAL_IP
+        IDP_EXTERNAL_PORT
+        REGISTRY
+        MOCK_AWS
+        SHIBBOLETH_CONFIG
+    )
+    DATE=$( date +%Y%m%d-%H%M )
+    CONFIG_OUTPUT_FILE_COMPOSE="saved-configs/compose_${PROJECT_ID}_${ENVIRONMENT}_${DATE}"
+    for compose_var in ${COMPOSE_VAR_LIST[*]}; do
+        # Write only non empty vars
+        if [ "${!compose_var}" != "" ]; then
+            echo "export ${compose_var}=${!compose_var}" >> "${CONFIG_OUTPUT_FILE_COMPOSE}"
+        fi
+    done
+    if [ "${PUBLIC_HOSTED_ZONE}" != "" ]; then
+        echo "export DOMAIN_NAME=${PUBLIC_HOSTED_ZONE}" >> "${CONFIG_OUTPUT_FILE_COMPOSE}"
+    fi
+    if [ "${MOCK_AWS}" != "true" ] ; then
+        format_aws_var_exports=$( echo "${aws_var_exports}" | sed 's/;/\n/g' | sed 's/^\s*//g' )
+        echo "${format_aws_var_exports}" >> "${CONFIG_OUTPUT_FILE_COMPOSE}"
+    fi
+    log_info "Compose settings saved in ${CONFIG_OUTPUT_FILE_COMPOSE} file"
+    # Save file to docker-host
+    docker-machine scp "${CONFIG_OUTPUT_FILE_COMPOSE}"\
+        "${DOCKERHOST_INSTANCE}":/home/ubuntu/"${CONFIG_OUTPUT_FILE_COMPOSE}"
+    log_info "Compose settings saved in ${DOCKERHOST_INSTANCE}:/home/ubuntu/${CONFIG_OUTPUT_FILE_COMPOSE}"
+}
+
 # Entrypoint ###################################################################
 
 main()
@@ -505,6 +568,9 @@ main()
     local -r public_ns="$(aws_r53_get_zone_ns "${PUBLIC_HOSTED_ZONE}")"
     log_info "The following NS records must be added to DNS for ${PUBLIC_DOMAIN_NAME}:"
     log_info "  ${public_ns}"
+    log_info "Saving settings..."
+    saveconfig_deploy
+    saveconfig_compose
     log_info "Done."
 }
 
