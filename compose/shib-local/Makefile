@@ -57,7 +57,7 @@ build-idp:
 		-e IDP_LDAP_HOSTNAME=$(IDP_LDAP_HOSTNAME) \
 		-e IDP_OWNER_UID=$(shell id -u) \
 		-e IDP_OWNER_GID=$(shell id -g) \
-		unicon/shibboleth-idp /setup/bin/init-idp.sh
+		unicon/shibboleth-idp:3.3.3 /setup/bin/init-idp.sh
 	# Copy IdP dockerfile to build dir as part of its container context
 	@docker run --rm \
 		--user $(shell id -u):$(shell id -g) \

@@ -1,4 +1,4 @@
-FROM unicon/shibboleth-idp
+FROM unicon/shibboleth-idp:3.3.3
 
 MAINTAINER Arkivum Limited
 
